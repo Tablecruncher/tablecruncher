@@ -1,0 +1,13 @@
+_my_github_notes.md
+scripts/sign-and-notarize.sh
+**/.DS_Store
+.vscode
+.vs/
+build/
+Tablecruncher
+*.o
+*.zip
+tmtags
+tmtagsHistory
+docs/doxygen/
+CMakeSettings.json
