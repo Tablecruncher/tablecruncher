@@ -1,0 +1,21 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 16
+    },
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default (set FLTK paths manually)",
+            "description": "Configure with user-supplied FLTKINCDIR and FLTKLIBDIR.",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+          "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "Release",
+            "FLTKINCDIR": "C:\\path\\to\\your\\fltk-x.y.z",
+            "FLTKLIBDIR": "C:\\path\\to\\your\\fltk-x.y.z\\build-nmake"
+          }
+        }
+    ]
+}
