@@ -59,7 +59,7 @@ Here’s how you can help:
 - **Star this repository** — it really helps!
 - **Share it** on LinkedIn, X/Twitter, Mastodon, or your favorite platform
 - **Test the app and report bugs** via GitHub Issues
-- **Join my newsletter**: [The Missing Header](https://themissingheader.com) — a deep dive into data handling challenges and tools
+- **Join my newsletter**: [The Missing Header](https://missingheader.com) — a deep dive into data handling challenges and tools
 
 ---
 
