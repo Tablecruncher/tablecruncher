@@ -1,0 +1,62 @@
+#ifndef _UI_ICONS_DEL_COL
+#define _UI_ICONS_DEL_COL
+
+/* XPM */
+static const char *icon_del_col[] = {
+/* columns rows colors chars-per-pixel */
+"48 48 3 1 ",
+"  c None",
+". c #F38337",
+"X c #888888",
+/* pixels */
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                ",
+"            XXXXXXXXXXXXXXXXXXXXXXXX            ",
+"            XXXXXXXXXXXXXXXXXXXXXXXX            ",
+"            XXXXXXXXXXXXXXXXXXXXXXXX            ",
+"            XXXXXXXXXXXXXXXXXXXXXXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX  ............  XXXX            ",
+"            XXXX  ............  XXXX            ",
+"            XXXX  ............  XXXX            ",
+"            XXXX  ............  XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXX                XXXX            ",
+"            XXXXXXXXXXXXXXXXXXXXXXXX            ",
+"            XXXXXXXXXXXXXXXXXXXXXXXX            ",
+"            XXXXXXXXXXXXXXXXXXXXXXXX            ",
+"            XXXXXXXXXXXXXXXXXXXXXXXX            ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                "
+};
+
+#endif

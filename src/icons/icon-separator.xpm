@@ -1,0 +1,46 @@
+#ifndef _UI_ICONS_SEPARATOR
+#define _UI_ICONS_SEPARATOR
+
+/* XPM */
+static const char *icon_separator[] = {
+/* columns rows colors chars-per-pixel */
+"32 32 3 1 ",
+"  c None",
+". c #CBCBCB",
+"X c #D5D5D5",
+/* pixels */
+"                                ",
+"                                ",
+"                                ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"              XXXX              ",
+"                                ",
+"                                ",
+"                                "
+};
+
+#endif

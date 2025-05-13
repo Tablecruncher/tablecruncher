@@ -1,0 +1,62 @@
+#ifndef _UI_ICONS_SAVE
+#define _UI_ICONS_SAVE
+
+/* XPM */
+static const char *icon_save[] = {
+/* columns rows colors chars-per-pixel */
+"48 48 3 1 ",
+"  c None",
+". c #F38337",
+"X c #888888",
+/* pixels */
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                      ....                      ",
+"                      ....                      ",
+"    XXXXXXXXXXXXX     ....     XXXXXXXXXXXXX    ",
+"    XXXXXXXXXXXX      ....      XXXXXXXXXXXX    ",
+"    XXXXXXXXXXX       ....       XXXXXXXXXXX    ",
+"    XXXXXXXXXXX       ....       XXXXXXXXXXX    ",
+"    XXXX              ....              XXXX    ",
+"    XXXX              ....              XXXX    ",
+"    XXXX          ............          XXXX    ",
+"    XXXX           ..........           XXXX    ",
+"    XXXX            ........            XXXX    ",
+"    XXXX             ......             XXXX    ",
+"    XXXX              ....              XXXX    ",
+"    XXXX               ..               XXXX    ",
+"    XXXX                                XXXX    ",
+"    XXXX                                XXXX    ",
+"    XXXX                                XXXX    ",
+"    XXXX                                XXXX    ",
+"    XXXX                                XXXX    ",
+"    XXXX                                XXXX    ",
+"    XXXX                                XXXX    ",
+"    XXXX                                XXXX    ",
+"    XXXX                                XXXX    ",
+"    XXXX                                XXXX    ",
+"    XXXX                                XXXX    ",
+"    XXXX                                XXXX    ",
+"    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ",
+"    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ",
+"    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ",
+"    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX    ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                ",
+"                                                "
+};
+
+#endif

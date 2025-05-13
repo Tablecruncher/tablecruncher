@@ -1,0 +1,306 @@
+Releases
+========
+
+
+1.8.0 (2025-xx-xx)
+------------------
+
+This release marks a major milestone: Tablecruncher is now open
+source! The application is also available for Windows and Linux, no
+longer limited to macOS.
+
+You can find the source code at:
+https://github.com/Tablecruncher/tablecruncher
+
+* License: Now published under the GPL v3 license
+* Feature: Global variables can now be used in macros
+* Fixed: Recently opened files list is now correctly reordered
+* Improved: Updated the bundled FLTK library
+* Improved: Removed Boost and libiconv dependencies to simplify builds
+
+
+1.7.0 (2024-10-17)
+--------------------
+
+This release introduces compatibility with macOS Sequoia (macOS 15)
+and brings several enhancements to improve usability.
+
+* Feature: Compatible with macOS Sequoia (macOS 15)
+* Feature: A list of recently opened files is shown in the File menu
+* Feature: Select a font for the CSV table display
+* Feature: 'Arrange Columns' to adapt column sizes to content
+* Feature: Shift-Click a cell header to select multiple columns
+* Feature: Several UI improvements
+* Fixed: Enlarging the current selection by shift-clicking a cell
+* Fixed: Some smaller bugs
+
+
+
+1.6.0.1 (2021-09-02)
+--------------------
+
+Just some important bug fixes to improve stability.
+
+* Fixed: One major bug that could cause a crash on some occasions
+* Fixed: Some smaller bugs
+
+
+1.6.0.0 (2021-08-29)
+--------------------
+
+Version 1.6 offers a new feature that many users have asked for. With
+"Data > Check Data Consistency ..." you can easily check if the values
+in the currently active column look consistent.
+
+* Feature: Check data consistency
+* Fixed: Some smaller bugs
+
+
+1.5.1.0 (2020-11-23)
+--------------------
+
+With Big Sur release approaching, this version ensures compatibility
+with the newest macOS.
+
+* Feature: Universal binary for Intel and ARM64 ("Apple Silicon")
+
+
+1.5.0.2 (2020-09-21)
+--------------------
+
+With Big Sur release approaching, this version ensures compatibility
+with the newest macOS.
+
+* Feature: macOS Big Sur compatibility
+
+
+1.4.0.0 (2020-04-22)
+--------------------
+
+This is primarily a bug fix update. If fixes a nasty bug when searching
+(and replacing) with regular expressions. When there was a single quote
+in the search expression, replacing did not work as expected, sometimes
+replacing weird data. So please upgrade as soon as possible, if you're
+using regular expressions.
+There's one new feature, though. "File > Split CSV ..." allows you to
+easily split a CSV file into multiple CSV files. If the initial file
+has the header row activated, all split files also contain that header
+row.
+
+* Feature: Split a CSV file in multiple files
+* Fixed: Search and Replace using Regular Expressions didn't work when
+    there were single quotes in the search or replace pattern
+* Fixed: The font size of the edited cell did not zoom according to
+    the chosen text zoom level
+* Fixed: The label text shown on the "Processing" window was not
+    readable on dark themes
+
+
+1.3.0.0 (2020-02-05)
+--------------------
+
+Version 1.3 introduces a feature that's been on the road map for a very
+long time: Regular Expressions! You can now use ECMAScript 5 compatible
+Regular Expressions in the Find&Replace dialog to find and replace
+matching cells or flag rows. Please read the designated chapter in the
+documentation on how Regular Expressions are implemented in
+Tablecruncher and how to use them.
+Flagged rows can now be easily exported as a new CSV file, using the
+CSV definitions as set by the source file. Flagging status can now also
+be inverted, so that formerly flagged rows are not flagged and vice
+versa.
+The new feature "Jump to Cell ..." allows you to directly navigate to
+an arbitrary cell. Insted of just accepting a row number, you can now
+enter a column name, prepended by a colon or combine both to jump to
+the cell you want.
+
+* Feature: Use Regular Expressions as a search pattern and back
+	references in Find&Replace dialog
+* Feature: Export flagged rows to a CSV file
+* Feature: Invert flagged rows
+* Feature: Jump to an arbitrary cell using row number and column name
+	or number
+* Feature: Keyboard shortcut to move columns
+* Feature: New theme "Solarized Dark"
+* Feature: Handle up to 10 files simultaneously
+* Fixed: When closing Find&Replace or Sort window, wrong window was
+	activated, if more thant one Tablecruncher window has been opened
+
+
+1.2.0.1 (2019-10-10)
+--------------------
+
+This update offers functions to split a single column into two columns and to
+merge two existing columns into one. This should be useful for a lot of
+situations, where the data you get has not the expected format. Additionally
+Tablecruncher now stores the column widths and the header row status when a
+file is saved. On opening that same file again the widths and header row is set
+to its previous state.
+
+* Feature: Split column into two columns
+* Feature: Merge two adjacent columns by providing an optional glue string
+* Feature: Column widths and header status are stored when file gets save
+* Feature: Asterisk can now be used as a delimiter
+* Fixed: When new rows were created by pasting, the columns next to them
+    sometimes won't accept new data
+
+
+1.1.0.0 (2019-07-04)
+--------------------
+
+This is the first update for version 1.0 containing several bug fixes and a
+feature to edit cells with large content.
+
+* Feature: Open a text editor window to edit a multiline cell
+* Feature: Show two little red dots, when cell content is partially hidden
+* Feature: Macro window is resizable
+* Fixed: Selection was unselected while clicking onto the scroll bars
+* Fixed: Edit cell window: Zoom (CMD+-) also zoomed main window
+* Fixed: Files with a single column didn't work
+* Fixed: Paste in some occassions didn't work correctly
+* Known Bug: Cell dimensions shown on the statusbar are sometimes not correct
+* Known Bug: An endless loop in a macro causes the application to freeze
+
+
+1.0.0.0 (2019-06-28)
+--------------------
+
+In version 1.0.0.0 memory usage could be reduced a lot. Tablecruncher can now
+open and process even extremly large CSV files and most tasks are now faster
+than before. On the other hand, there are some actions (sorting rows, and
+moving, inserting and deleting columns) that will take longer.
+
+* Feature: Internal storage of CSV data has been changed for improved RAM usage
+* Feature: Show "Processing" window on any long running task
+* Feature: Show scope of Find and Replace in search dialog
+* Fixed: Sorting columns numerically failed if non-numeric cells were present
+* Fixed: A first row with empty cells is not regarded as a valid header anymore
+* Fixed: Several minor bugs and inconsistencies
+* Known Bug: Cell dimensions shown on the statusbar are sometimes not correct
+* Known Bug: An endless loop in a macro causes the application to freeze
+
+
+0.9.9.0 beta (2019-06-12)
+-------------------------
+This beta version 0.9.9.0 should be the last version before finally launching
+1.0. It fixes several bugs, one of them leading to a blurry appearance on
+retina displays. 
+
+* Beta works until 2019-07-31
+* Feature: Tablecruncher checks regularly for new updates (optionally)
+* Feature: Undo can be disabled to save memory working with very large files
+* Feature: Tablecruncher offers to disable Undo when opened file is very large
+* Feature: Warns if opened file contains rows with varying column numbers
+* Feature: Application bundle is notarized by Apple
+* Fixed: On high resolution displays Tablecruncher sometimes looked blurry.
+* Fixed: Several minor bugs and inconsistencies
+* Known Bug: Cell dimensions shown on the statusbar are sometimes not correct
+* Known Bug: An endless loop in a macro causes the application to freeze
+
+
+0.9.8 beta (2019-05-07)
+------------------------
+In version 0.9.8-beta a lot of bugs were fixed, while the focus was to improve
+usability. The "Find and Replace" dialog has several new features: Searching
+is now restricted to selected cells and matching rows can be either flagged or
+unflagged, giving great flexibility for searching and filtering CSV files.
+
+* Beta works until 2019-06-30
+* Feature: Users can now specify the quoting style they want when saving a CSV
+	file
+* Feature: Users can now specify the escape character when openen a CSV file
+* Feature: Search is restricted to selected cells
+* Feature: Delete (clear) all selected cells by pressing BACKSPACE key
+* Feature: Jump to row by entering the row number
+* Feature: Flag arbitrary rows to later do something with (e.g. delete) them by
+	either ALT-clicking the row header or using the Find&Replace dialog
+* Feature: New macro API function flagRow()
+* Feature: Sort window preselects the search type based on the column content
+	(ony when opening on with right-click on header row)
+* Feature: Better support for Dark Mode
+* Changed: Found cell is highlighted with green background
+* Changed: Color schemes improved to reflect flagged rows
+* Changed: Menu "Find" is now called "Data" as its more appropriate for further
+	features
+* Fixed: "Delete Rows ..." showed wrong number of rows
+* Fixed: Pressing "Enter" performs the default action (eg. in Find and Sort)
+* Fixed: Sometimes Undo was not available even when an Undo state has been
+	saved
+* Fixed: "Open with format ..." sometimes didn't show the preview table when
+	a file encoding couldn't be guessed
+* Fixed: Pressing ESC key on closing window confirmation dialog	resulted in
+	closing the unsaved window thus losing all changes
+* Fixed: An empty header caused a wrong label in the column dropdown of the
+	Sort window
+* Fixed: The selection was not correct after moving, adding or deleting rows
+* Fixed: Crash, when pressing CMD-q while the open file dialog was opened
+* Fixed: Pressing ENTER in sort window did not sort data
+* Fixed: Pasting text without CSV delimiters asked user to select CSV type
+* Fixed: Several minor bugs and inconsistencies
+* Known Bug: Cell dimensions shown on the statusbar are sometimes not correct
+* Known Bug: An endless loop in a macro causes the application to freeze
+
+
+0.9.7 beta (2019-01-25)
+------------------------
+* Beta works until 2019-06-30
+* Feature: Use JavaScript as a macro language to manipulate the table data
+* Feature: Export table data as a JSON file
+* Feature: Improved look and feel
+* Fixed: Themes are applied to search and several other dialogs
+* Fixed: Columns greater than 675 get generic Excel-like column names instead
+    of "COL"
+* Fixed: Several smaller bugs have been fixed
+
+
+0.9.6 beta (2018-12-04)
+------------------------
+* Beta works until 2019-06-30
+* Feature: Sort rows via Find > Sort ... or right-clicking a column header
+* Feature: Move selected column(s) left or right
+* Feature: UTF-16LE and UTF-16BE encodings supported for reading and writing
+* Feature: Automatically set header if first row looks like header row
+* Feature: Mouse click while holding shift key selects area
+* Fixed: Improved heuristic for guessing CSV formats
+* Fixed: Several smaller bugs have been fixed
+
+
+0.9.5 beta (2018-10-19)
+------------------------
+* Beta works until 2019-06-30
+* Feature: "Headers" treats the first row as a header row
+* Feature: Undo works now for an arbitrary number of steps.
+* Feature: Introduced a dark theme and a solarized bright theme.
+* Feature: Better support for multiple windows and tabs. (E.g. Merge all
+	windows)
+* Feature: New Buttons to delete columns or rows, highlighting the cells to be
+	deleted.
+* Feature: Search Window remembers settings between search sessions.
+* Feature: Changing font size changes the row height accordingly
+* Feature: Closing the last window doesn't close application
+* Fixed: Headers for files with more than 676 columns got cryptic names like
+	"[A".
+* Fixed: "Replace" sometimes ignored the "Ignore Case" setting.
+* Fixed: Paste sometimes overwrote cells below the pasted data
+* Fixed: Should work on OS X 10.11 El Capitan again
+
+
+0.9.2 beta (2018-04-01)
+------------------------
+* Beta works until 2018-12-31
+* Fixed some bugs
+
+
+0.9.1 beta (2017-10-21)
+------------------------
+* Fixed a bug that caused the app to not start on most Macs
+
+
+0.9.0 beta (2017-10-18)
+------------------------
+* First public beta release
+* Opens CSV files with UTF-8, Windows-1252 and Latin-1 (ISO-8859-1) encoding
+* File size is just limited by available memory
+* Copy and Paste
+* Search and Replace
+* Opens multiple files simultaneously

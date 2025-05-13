@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Tablecruncher
+Exec=tablecruncher
+Icon=tablecruncher
+Type=Application
+Categories=Utility;
+Terminal=false
