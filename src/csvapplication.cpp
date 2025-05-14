@@ -2968,7 +2968,7 @@ void CsvApplication::aboutCB(Fl_Widget *, void *) {
 	std::string html;
 	
 	std::string VERSION_STR(MY_VERSION);
-	std::string BUILD_YEAR_STRING("2024");
+	std::string BUILD_YEAR_STRING("2025");
 	#ifdef MY_YEAR
 	BUILD_YEAR_STRING = "" MY_YEAR "";
 	#endif
@@ -2976,7 +2976,7 @@ void CsvApplication::aboutCB(Fl_Widget *, void *) {
 	#ifdef MY_TODAY
 	BUILD_TODAY_STRING = "" MY_TODAY "";
 	#endif
-	std::string BUILD_NOW_STRING("2025-01-01 00:00");
+	std::string BUILD_NOW_STRING("2025-01-01T00:00");
 	#ifdef MY_NOW
 	BUILD_NOW_STRING = "" MY_NOW "";
 	#endif
@@ -3019,7 +3019,7 @@ void CsvApplication::aboutCB(Fl_Widget *, void *) {
 					"</p>"
 					"<p>c 2017-" + BUILD_YEAR_STRING + " by Stefan Fischerländer</p>"
 					"<p><a href=\"https://tablecruncher.com\">https://tablecruncher.com</a></p>"
-					"<p><font size=\"2\"><a href=\"https://tablecruncher.com/doc.txt\">Documentation</a> – <a href=\"https://tablecruncher.com/readme.txt\">Readme</a></font></p>"
+					"<p>License: GPLv3</p>"
 					"<p><font size=\"2\">Solarized and Solarized Dark themes by <a href=\"https://ethanschoonover.com/solarized/\">Ethan Schoonover</a></p>"
 					"<p><font size=\"2\">Build date: " + BUILD_NOW_STRING + "</p>"
 					#ifdef DEBUG
