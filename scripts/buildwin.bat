@@ -5,7 +5,7 @@ setlocal
 set /p VERSION=<version.txt
 
 :: Update icon using Resource Hacker
-ResourceHacker.exe -open Tablecruncher.exe -save Tablecruncher_patched.exe -action addoverwrite -res ..\assets\windows\app_icon.ico -mask ICONGROUP,MAINICON,
+"C:\Program Files (x86)\Resource Hacker\ResourceHacker.exe" -open ..\build\dist\Tablecruncher.exe -save Tablecruncher_patched.exe -action addoverwrite -res ..\assets\windows\app_icon.ico -mask ICONGROUP,MAINICON,
 
 :: Replace original if patching succeeded
 if exist Tablecruncher_patched.exe (
@@ -16,4 +16,4 @@ if exist Tablecruncher_patched.exe (
 )
 
 :: Compile Inno Setup with version macro
-ISCC.exe /DMyAppVersion=%VERSION% win-setup.iss
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=%VERSION% win-setup.iss

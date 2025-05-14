@@ -9,3 +9,4 @@ tmtags
 tmtagsHistory
 docs/doxygen/
 CMakeSettings.json
+scripts/*.exe

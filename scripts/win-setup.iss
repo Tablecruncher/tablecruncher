@@ -1,15 +1,18 @@
 ; Tablecruncher Installer Script with Uninstall and File Association
 
+
+
 [Setup]
 AppName=Tablecruncher
-AppVersion={#MyAppVersion}
-DefaultDirName={pf}\Tablecruncher
+AppVersion={#AppVersion}
+DefaultDirName={commonpf}\Tablecruncher
 DefaultGroupName=Tablecruncher
 OutputDir=.
-OutputBaseFilename=TablecruncherInstaller
+OutputBaseFilename=Tablecruncher_v{#AppVersion}_Win64_installer
 Compression=lzma
 SolidCompression=yes
 UninstallDisplayIcon={app}\Tablecruncher.exe
+SetupIconFile=..\assets\windows\app_icon.ico
 
 [Files]
 Source: "Tablecruncher.exe"; DestDir: "{app}"; Flags: ignoreversion
