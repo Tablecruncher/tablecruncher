@@ -1,3 +1,10 @@
+/*
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ * 
+ * Copyright (C) 2025 Stefan Fischerländer
+ * 
+ */
+
 #ifndef _UI_ICONS_ABOUTICON
 #define _UI_ICONS_ABOUTICON
 

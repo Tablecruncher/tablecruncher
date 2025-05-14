@@ -5,7 +5,7 @@
 **Tablecruncher** is a blazing-fast CSV editor built to handle massive files with ease, available for macOS, Windows and Linux. 
 Need to open a 2 GB file with 16 million rows? On a Mac Mini M2, Tablecruncher does it in just **32 seconds**.
 
-Originally released in 2017 as a commercial app, Tablecruncher is now fully open source under the **GPL v3 license**.
+Originally released in 2017 as a commercial app, Tablecruncher is now fully open source under the **GPL v3 license** (or later).
 
 
 ---
@@ -65,6 +65,9 @@ Here’s how you can help:
 
 ## License & Branding
 
-The Tablecruncher application is licensed under [GPL v3](LICENSE).
+The Tablecruncher application is licensed under [GPL v3 or later](LICENSE).
+
+All UI icons are © 2025 Stefan Fischerländer and licensed under GPL-3.0-or-later or CC BY 4.0, at your choice.
+The Tablecruncher app logo is © 2025 Stefan Fischerländer and licensed only under GPL-3.0-or-later.
 
 You are welcome to fork and build upon Tablecruncher. If you release a modified version, _please use a different name and logo_ to avoid user confusion.
