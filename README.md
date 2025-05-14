@@ -71,3 +71,30 @@ All UI icons are © 2025 Stefan Fischerländer and licensed under GPL-3.0-or-lat
 The Tablecruncher app logo is © 2025 Stefan Fischerländer and licensed only under GPL-3.0-or-later.
 
 You are welcome to fork and build upon Tablecruncher. If you release a modified version, _please use a different name and logo_ to avoid user confusion.
+
+---
+
+## Third-Party Libraries Used in Tablecruncher
+
+
+Tablecruncher includes the following third-party libraries:
+
+- **[duktape](https://duktape.org/)**  
+  License: MIT  
+  Copyright: 2013-2023 by Duktape authors
+
+- **[cpp-httplib](https://github.com/yhirose/cpp-httplib)**  
+  License: MIT  
+  Copyright: 2019-2025 by Yuji Hirose
+
+- **[nlohmann/json](https://github.com/nlohmann/json)**  
+  License: MIT  
+  Copyright: 2013-2025 by Niels Lohmann
+
+- **[utfcpp](https://github.com/nemtrif/utfcpp)**  
+  License: Boost Software License 1.0  
+  Copyright: 2006-2023 by Nemanja Trifunovic
+
+Each library is included in source form under the terms of its respective license.
+License texts are found in the corresponding subdirectories within [/external/](/external/), either as dedicated license files or embedded directly in the source code.
+

@@ -19,7 +19,7 @@
  * along with Tablecruncher. If not, see <https://www.gnu.org/licenses/>.
  */
 
- #include "colorthemes.hh"
+#include "colorthemes.hh"
 
 
 /************************************************************************************
