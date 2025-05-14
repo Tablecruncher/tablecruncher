@@ -2,7 +2,7 @@
 
 [Setup]
 AppName=Tablecruncher
-AppVersion=1.8
+AppVersion={#MyAppVersion}
 DefaultDirName={pf}\Tablecruncher
 DefaultGroupName=Tablecruncher
 OutputDir=.
