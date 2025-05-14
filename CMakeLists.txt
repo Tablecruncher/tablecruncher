@@ -61,7 +61,7 @@ if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
-string(TIMESTAMP NOW "%Y-%m-%dT%H-%M")
+string(TIMESTAMP NOW "%Y-%m-%dT%H:%M")
 string(TIMESTAMP TODAY "%Y-%m-%d")
 string(TIMESTAMP YEAR "%Y")
 
