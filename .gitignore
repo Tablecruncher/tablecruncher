@@ -10,3 +10,5 @@ tmtagsHistory
 docs/doxygen/
 CMakeSettings.json
 scripts/*.exe
+scripts/appimagetool-x86_64.AppImage
+

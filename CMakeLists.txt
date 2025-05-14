@@ -6,7 +6,6 @@ cmake_minimum_required(VERSION 3.16)
 project(Tablecruncher VERSION 1.8.1)
 
 
-
 #
 # NO MORE SETTINGS BENEATH THIS LINE
 #
@@ -87,6 +86,9 @@ elseif(APPLE)
 elseif(LINUX)
     set(PLATFORM "Linux")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -DMY_VERSION=\\\"${APP_VERSION}\\\" -DMY_YEAR=\\\"${YEAR}\\\" -DMY_TODAY=\\\"${TODAY}\\\" -DMY_NOW=\\\"${NOW}\\\" -D_THREAD_SAFE -D_REENTRANT")
+    if(APPIMAGE STREQUAL "1")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--dynamic-linker=/lib64/ld-linux-x86-64.so.2")
+    endif()
 endif()
 
 # Source and header files

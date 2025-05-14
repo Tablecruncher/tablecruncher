@@ -1,7 +1,10 @@
 [Desktop Entry]
 Name=Tablecruncher
+Comment=Fast CSV viewer and editor
 Exec=tablecruncher
 Icon=tablecruncher
 Type=Application
 Categories=Utility;
 Terminal=false
+X-AppImage-Version=1.0.0
+

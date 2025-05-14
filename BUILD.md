@@ -95,12 +95,18 @@ Use `VS Studio C++` to build the application. Or use `cmake` in a "Developer Com
 ### Build Tablecruncher
 
     mkdir -p build && cd build
-    cmake -DFLTKDIR="/home/sf/Documents/Builds/FLTK/fltk-1.4.3" ..
+    rm -rf *
+    cmake -DFLTKDIR="/home/sf/Documents/Builds/fltk-1.4.3" ..
     cmake --build . -- -j$(nproc)
 
 
-## Build Flatpak bundle
+## Build AppImage package
 
-    # First create the Linux binary in ./build/dist/ then run ...
-    flatpak-builder --user --install --force-clean flatpak-build-dir assets/linux/tablecruncher.flatpak.json
+    cd build/
+    rm -rf *
+    cmake -DFLTKDIR="/home/sf/Documents/Builds/fltk-1.4.3" -DAPPIMAGE=1 ..
+    cmake --build . -- -j$(nproc)
+    cd ../scripts/
+    ./build_appimage.sh
+
 
