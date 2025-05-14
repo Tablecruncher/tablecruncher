@@ -1,6 +1,28 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(Tablecruncher VERSION 1.8.0)
+#
+#   UPDATE THE VERSION NUMBER:
+#
+project(Tablecruncher VERSION 1.8.1)
+
+
+
+#
+# NO MORE SETTINGS BENEATH THIS LINE
+#
+
+if(PROJECT_VERSION_PATCH LESS 10)
+    set(APP_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}-beta${PROJECT_VERSION_PATCH}")
+elseif(PROJECT_VERSION_PATCH EQUAL 10)
+    set(APP_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
+else()
+    math(EXPR APP_VERSION_PATCH "${PROJECT_VERSION_PATCH}-10" OUTPUT_FORMAT DECIMAL) 
+    set(APP_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${APP_VERSION_PATCH}")
+endif()
+
+
+message(STATUS ">>> Calculated APP_VERSION: ${APP_VERSION}")
+
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -51,7 +73,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 # Detect the platform
 if(WIN32)
     set(PLATFORM "Windows")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /DMY_VERSION=\\\"${PROJECT_VERSION}\\\" /DMY_YEAR=\\\"${YEAR}\\\" /DMY_TODAY=\\\"${TODAY}\\\" /DMY_NOW=\\\"${NOW}\\\"  /D_FILE_OFFSET_BITS=64 /DWIN32_LEAN_AND_MEAN /DNOMINMAX")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /DMY_VERSION=\\\"${APP_VERSION}\\\" /DMY_YEAR=\\\"${YEAR}\\\" /DMY_TODAY=\\\"${TODAY}\\\" /DMY_NOW=\\\"${NOW}\\\"  /D_FILE_OFFSET_BITS=64 /DWIN32_LEAN_AND_MEAN /DNOMINMAX")
     set(LINKER_FLAGS "/NODEFAULTLIB:library")
 elseif(APPLE)
     execute_process(COMMAND uname -p OUTPUT_VARIABLE ARCH OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -60,11 +82,11 @@ elseif(APPLE)
     else()
         set(PLATFORM "macOS_X86")
     endif()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -DMY_VERSION=\\\"${PROJECT_VERSION}\\\" -DMY_YEAR=\\\"${YEAR}\\\" -mmacosx-version-min=${MACOS_VERSION} -D_THREAD_SAFE -D_REENTRANT")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -DMY_VERSION=\\\"${APP_VERSION}\\\" -DMY_YEAR=\\\"${YEAR}\\\" -DMY_TODAY=\\\"${TODAY}\\\" -DMY_NOW=\\\"${NOW}\\\" -mmacosx-version-min=${MACOS_VERSION} -D_THREAD_SAFE -D_REENTRANT")
     set(CMAKE_C_FLAGS "-mmacosx-version-min=${MACOS_VERSION}")
 elseif(LINUX)
     set(PLATFORM "Linux")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -DMY_VERSION=\\\"${PROJECT_VERSION}\\\" -DMY_YEAR=\\\"${YEAR}\\\" -D_THREAD_SAFE -D_REENTRANT")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -DMY_VERSION=\\\"${APP_VERSION}\\\" -DMY_YEAR=\\\"${YEAR}\\\" -DMY_TODAY=\\\"${TODAY}\\\" -DMY_NOW=\\\"${NOW}\\\" -D_THREAD_SAFE -D_REENTRANT")
 endif()
 
 # Source and header files
@@ -146,12 +168,12 @@ if(APPLE)
     add_custom_command(
         TARGET ${PROJECT_NAME}
         POST_BUILD
-        COMMAND ${CMAKE_SOURCE_DIR}/scripts/create-bundle.sh ${MACOS_VERSION} ${PROJECT_VERSION}
+        COMMAND ${CMAKE_SOURCE_DIR}/scripts/create-bundle.sh ${MACOS_VERSION} ${APP_VERSION}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Creating macOS App Bundle"
     )
     add_custom_target(create_bundle
-        COMMAND ${CMAKE_SOURCE_DIR}/scripts/create-bundle.sh ${MACOS_VERSION} ${PROJECT_VERSION}
+        COMMAND ${CMAKE_SOURCE_DIR}/scripts/create-bundle.sh ${MACOS_VERSION} ${APP_VERSION}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Creating macOS App Bundle"
     )
