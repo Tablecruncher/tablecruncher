@@ -27,13 +27,16 @@ Originally released in 2017 as a commercial app, Tablecruncher is now fully open
 
 ## Download
 
-At the moment, only the **previous commercial version for macOS** is available as a prebuilt binary:  
+Prebuilt binaries of the newly open-sourced Tablecruncher v1.8-beta1 are now available for:
+
+- macOS (ARM)
+- Windows (x86_64)
+- Linux (x86_64)
+
+You can find them under [Releases](https://github.com/Tablecruncher/tablecruncher/releases).
+
+If you're looking for the previous stable version (v1.7) for macOS (ARM and Intel), it's still available at:  
 **[tablecruncher.com/download](https://tablecruncher.com/download/)**
-
-The newly open-sourced version is currently available as **source code only**.  
-Prebuilt installers for macOS, Windows, and Linux will be published soon.
-
-_Building and testing binaries across all supported platforms takes a bit of time — thanks for your patience!_
 
 ---
 
