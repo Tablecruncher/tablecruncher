@@ -13,7 +13,7 @@
 
  Change to the top directory of the FLTK source (the one containing `configure`) and build FLTK using the command line:
 
-    MIN_MAC_VERSION=13.0
+    MIN_MAC_VERSION=10.15
     NUM_CORES=$(sysctl -n hw.perflevel0.physicalcpu 2>/dev/null || sysctl -n hw.physicalcpu)
     ./configure CFLAGS="-mmacosx-version-min=$MIN_MAC_VERSION" CXXFLAGS="-mmacosx-version-min=$MIN_MAC_VERSION" LDFLAGS="-mmacosx-version-min=$MIN_MAC_VERSION" --enable-localzlib
     make -j$NUM_CORES
@@ -28,7 +28,7 @@ Adapt the paths to your FLTK builds in `CMakeLists.txt` and build the applicatio
     mkdir -p build && cd build
     NUM_CORES=$(sysctl -n hw.perflevel0.physicalcpu 2>/dev/null || sysctl -n hw.physicalcpu)
     rm -rf *
-    cmake -DFLTKDIR="/Users/sf/Documents/Builds/FLTK/fltk-1.4.3" -DMACOS_VERSION=13.0 ..
+    cmake -DFLTKDIR="/Users/sf/Documents/Builds/FLTK/fltk-1.4.3" -DMACOS_VERSION=$MIN_MAC_VERSION ..
     cmake --build . -- -j$NUM_CORES
 
 
