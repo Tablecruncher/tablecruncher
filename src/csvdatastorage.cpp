@@ -22,6 +22,10 @@
 
 #include "csvdatastorage.hh"
 
+#include <algorithm>
+#include <iomanip>  // needed for dump()
+#include <iostream> // needed for dump()
+#include <utf8-cpp-utils/utf8_cpp_utils.hh>
 
 /*
 

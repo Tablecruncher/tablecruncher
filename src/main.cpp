@@ -34,15 +34,12 @@
 
 
 #include "globals.hh"
-#include "csvtable.hh"
 #include "csvapplication.hh"
 #include "csvwindow.hh"
+#include "helper.hh"
 #include "macro.hh"
 
-#include <iostream>
 #include <string>
-#include <vector>
-#include <tuple>
 
 
 #include <FL/Fl.H>
@@ -74,6 +71,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
 #else
 int main(int argc, char** argv) {
 #endif
+	Fl_Window::default_xclass("tablecruncher");
 	int runState;
 	std::string homeDir;
 
