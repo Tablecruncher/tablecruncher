@@ -20,12 +20,21 @@
  */
 
 
+#include "colorthemes.hh"
 #include "csvapplication.hh"
 #include "csvmenu.hh"
-
+#include "csvparser.hh"
+#include "csvwindow.hh"
+#include "helper.hh"
 #include "icons/abouticon.xpm"
+#include "macro.hh"
 
-
+#include <algorithm>
+#include <deque>
+#include <filesystem>
+#include <fstream>
+#include <httplib.h>
+#include <utf8.h>
 
 /************************************************************************************
 *
@@ -363,6 +372,7 @@ int CsvApplication::createNewWindow() {
 	remainOpenWin->hide();
 	#endif
 	// setMenuBar(windows[newWindowIndex].win);
+	windows[newWindowIndex].applyTheme();
 	windows[newWindowIndex].win->show();
 	return newWindowIndex;
 }
@@ -872,7 +882,7 @@ std::pair<CsvDefinition, float> CsvApplication::guessDefinition(std::istream *in
 	float confidence;
 	CsvParser *parser = new CsvParser();
 	CsvDataStorage localStorage;
-	
+
 	// Define definitions for probing
 	std::vector< std::tuple<CsvDefinition,int,int> > definitions;
 	definitions.push_back( std::tuple<CsvDefinition, int, int>(CsvDefinition(),0,0) );

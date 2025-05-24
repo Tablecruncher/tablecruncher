@@ -32,9 +32,7 @@
 #include <FL/Fl_Light_Button.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Pixmap.H>
-
-
-#include "globals.hh"
+#include <cstdint>
 
 /** \file csvwidgets.hh
  * \brief Contains several classes that override FLTK widgets
@@ -46,7 +44,7 @@
 class My_Toolbar : public Fl_Pack {
   public:
 	My_Toolbar(int X,int Y,int W,int H);
-	Fl_Button *AddButton(const char *name, Fl_RGB_Image *img=0, Fl_Callback *cb=0, void *data=0, int width=0, std::string shortName="", int fontSize = 0);
+	Fl_Button *AddButton(const char *name, Fl_RGB_Image *img=0, Fl_Callback *cb=0, void *data=0, int width=0, const char *shortName="", int fontSize = 0);
 	Fl_Light_Button *AddCheckButton(const char *name, Fl_Callback *cb=0, void *data=0, int width=0);
 };
 

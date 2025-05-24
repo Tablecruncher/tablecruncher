@@ -23,29 +23,18 @@
 #ifndef _CSVTABLE_HH
 #define _CSVTABLE_HH
 
+#include "globals.hh"
+#include "csvdatastorage.hh"
 
 #include <iostream>
 #include <string>
 #include <vector>
-#include <map>
 #include <tuple>
-#include <algorithm>
-#include <iterator>
 #include <set>
 
 
 // #include <FL/Fl.H>
 // #include <FL/fl_ask.H>
-
-#include "json/json.hpp"
-
-#include "helper.hh"
-#include "globals.hh"
-#include "csvdatastorage.hh"
-
-// Used for stringstream and std::quoted in replaceUtf8String
-#include <iomanip>
-#include <sstream>
 
 
 

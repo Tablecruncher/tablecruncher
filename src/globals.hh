@@ -24,15 +24,6 @@
 #define _GLOBALS_HH
 
 
-#include <iostream>
-#include <tuple>
-#include <cstdint>
-#include <string>
-#include <map>
-#include <vector>
-
-
-
 typedef int table_index_t;
 
 
@@ -161,12 +152,12 @@ public:
 	char quote = '"';								// Quote character
 	char escape = '"';								// Escape character
 	int bomBytes = 0;								// length of a ByteOrderMarker (zero if no BOM present)
-	std::string linebreak = "\n";					// linebreak
+	const char *linebreak = "\n";					// linebreak
 	bool cancelled = false;							// Used by setTypeByUser() to signal a user abortion
 	QuoteStyles quoteStyle = QUOTE_STYLE_RFC;		// the quote style used for exports
 	
-	static std::string getEncodingName(Encodings encoding) {
-		std::string str = "";
+	static const char *getEncodingName(Encodings encoding) {
+		const char *str = "";
 		switch( encoding ) {
 			case ENC_UTF8:
 				str = "UTF-8";
@@ -192,8 +183,8 @@ public:
 		}
 		return str;
 	}
-	static std::string getDelimiterName(char delimiter) {
-		std::string str = "undef";
+	static const char *getDelimiterName(char delimiter) {
+		const char *str = "undef";
 		switch(delimiter) {
 			case ',':
 				str = "COMMA";

@@ -29,6 +29,9 @@
 
 #include "helper.hh"
 
+#include <algorithm>
+#include <regex>
+#include <chrono>
 
 /**
 	Calculates the memory usage of tableData

@@ -23,12 +23,12 @@
 #ifndef _RECENTFILES_HH
 #define _RECENTFILES_HH
 
-#include <iostream>
+#include "globals.hh"
+
 #include <string>
 #include <vector>
 #include <algorithm>
 
-#include "globals.hh"
 
 
 

@@ -25,27 +25,21 @@
 
 
 #include "globals.hh"
-#include "colorthemes.hh"
 #include "csvdatastorage.hh"
-#include "csvwindow.hh"
 #include "csvtable.hh"
 #include "csvgrid.hh"
+#include "csvwidgets.hh"
 #include "csvmenu.hh"
-#include "macro.hh"
+
 
 
 #include <vector>
 #include <tuple>
-#include <fstream>
 #include <map>
 #include <string>
 #include <ctime>
 #include <cmath>
-#include <algorithm>
-#include <filesystem>
 #include <iostream>
-#include <queue>
-#include <deque>
 
 #ifdef _WIN64
 #include <direct.h>
@@ -68,8 +62,6 @@
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Tooltip.H>
 
-
-#include "utf8.h"
 #include "recentfiles.hh"
 
 
@@ -100,8 +92,6 @@ namespace ui_icons {
 	#undef None
 	#endif
 #endif
-#include "httplib.h"
-
 
 #ifndef MY_VERSION
 #define MY_VERSION 0.0.0.0

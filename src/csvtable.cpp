@@ -28,8 +28,19 @@
 
 
 #include "csvtable.hh"
+#include "helper.hh"
 #include "macro.hh"
 
+#include <algorithm>
+#include <fstream>
+#include <json/json.hpp>
+#include <map>
+#include <ostream>
+#include <utf8-cpp-utils/utf8_cpp_utils.hh>
+
+// Used for stringstream and std::quoted in replaceUtf8String
+#include <iomanip>
+#include <sstream>
 
 extern Macro macro;		// to use JS for searching
 

@@ -28,6 +28,12 @@
 
 
 #include "csvparser.hh"
+#include "helper.hh"
+
+#include <sstream>
+// for reading utf16
+#include <locale>
+#include <codecvt>
 
 
 #ifndef TCRUNCHER_PARSER_WITHOUT_UPDATE
