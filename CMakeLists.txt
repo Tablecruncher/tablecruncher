@@ -35,18 +35,18 @@ set(FLTKINCDIR "" CACHE PATH "Path to FLTK include directory (optional if FLTKDI
 set(FLTKLIBDIR "" CACHE PATH "Path to FLTK lib directory (optional if FLTKDIR is set)")
 
 # Fallback logic
-if(APPLE AND NOT FLTKINCDIR)
+if(NOT FLTKINCDIR)
     if(FLTKDIR)
         set(FLTKINCDIR ${FLTKDIR})
-    else()
+    elseif(APPLE)
         message(FATAL_ERROR "Please set either FLTKINCDIR or FLTKDIR.")
     endif()
 endif()
 
-if(APPLE AND NOT FLTKLIBDIR)
+if(NOT FLTKLIBDIR)
     if(FLTKDIR)
         set(FLTKLIBDIR ${FLTKDIR})
-    else()
+    elseif(APPLE)
         message(FATAL_ERROR "Please set either FLTKLIBDIR or FLTKDIR.")
     endif()
 endif()
