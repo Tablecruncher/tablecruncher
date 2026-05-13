@@ -96,6 +96,8 @@ public:
 	static unsigned int getFltkFontCode(std::string fontname);
 	static std::string ws_to_utf8(std::wstring const& s);
 	static std::wstring utf8_to_ws(std::string const& utf8);
+	static void openInputStream(std::ifstream& stream, const std::string& utf8Path, std::ios_base::openmode mode = std::ios_base::in);
+	static void openOutputStream(std::ofstream& stream, const std::string& utf8Path, std::ios_base::openmode mode = std::ios_base::out);
 	static void log(std::string msg);
 private:
 	static std::map<const unsigned int, const unsigned char> unicode2win1252;

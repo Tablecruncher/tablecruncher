@@ -694,8 +694,9 @@ int CsvTable::saveCsv(std::string path, void (*cb)(const char*, void *), void *w
 	char msg[MAX_MSG_LEN + 1];
 	std::string tempStr;
 	int retCode = 0;
-	std::ofstream output(path, std::ios::binary);
-	
+	std::ofstream output;
+	Helper::openOutputStream(output, path, std::ios::binary);
+
 	// rather stupid TODO fix when `headerRow` gets fixed
 	std::vector<std::string> headerRowCopy;
 	headerRowCopy.resize( headerRow->size() );
@@ -757,7 +758,8 @@ int CsvTable::saveCsv(std::string path, void (*cb)(const char*, void *), void *w
 int CsvTable::exportJSON(std::string path, void (*cb)(const char*, void *), void *win, bool convertNumbers) {
 	table_index_t rowCount, colCount;
 	int retCode = saveReturnCode::SAVE_OKAY;
-	std::ofstream output(path, std::ios::binary);
+	std::ofstream output;
+	Helper::openOutputStream(output, path, std::ios::binary);
 	const int MAX_MSG_LEN = 500;
 	char msg[MAX_MSG_LEN + 1];
 	std::map<std::string, std::string> item;

@@ -195,7 +195,7 @@ CsvApplication::CsvApplication() {
 		std::string tmp_key = TCRUNCHER_PREF_RECENT_FILES_STUB + std::to_string(i);
 		std::string tmp_val = getPreference(&preferences, tmp_key, "");
 		if( tmp_val != "" ) {
-			std::filesystem::path recent_file(tmp_val);
+			std::filesystem::path recent_file = std::filesystem::u8path(tmp_val);
 			if( std::filesystem::exists(recent_file) ) {
 				recentFiles.add(tmp_val);
 			}
@@ -584,7 +584,7 @@ bool CsvApplication::splitCsvFiles() {
 				bool splitFileExists = false;
 				for(int i=0; i<numOfFiles; ++i) {
 					filename = splittedFileName(pathWithoutExtension, extension, i, digitalExtensionLength);
-					fileExistsTest.open(filename.c_str());
+					Helper::openInputStream(fileExistsTest, filename);
 					if( fileExistsTest.good() ) {
 						splitFileExists = true;
 						msg = "File " + Helper::getBasename(filename) + " does already exist!";
@@ -697,7 +697,7 @@ bool CsvApplication::saveFile(bool saveAs, CsvApplication::SaveType type, bool f
 			}
 			
 			// File exists?
-			fileExistsTest.open(fn.c_str());
+			Helper::openInputStream(fileExistsTest, fn);
 			if( fileExistsTest.good() ) {
 				// File exists!
 				choice = myFlChoice("Confirmation", "File already exists. Overwrite it?", {"Yes", "No"});

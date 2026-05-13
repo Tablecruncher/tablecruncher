@@ -344,7 +344,7 @@ bool CsvWindow::loadFile(std::string filename, bool askUser, bool reopen) {
 		return false;
 	}
 	
-	input.open(filename);
+	Helper::openInputStream(input, filename);
 	if( !input ) {
 		CsvApplication::myFlChoice("", "Could not open file!", {"Okay"});
 		return false;
