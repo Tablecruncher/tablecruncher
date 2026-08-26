@@ -21,6 +21,7 @@
 
 
 #include "csvapplication.hh"
+#include "csvguess.hh"
 #include "csvmenu.hh"
 
 #include "icons/abouticon.xpm"
@@ -175,6 +176,9 @@ CsvApplication::CsvApplication() {
 	imWorkingButton = new Fl_Button(10,10,380,100,"Please stand by while I'm working ...");
 	imWorkingButton->box(FL_NO_BOX);
 	imWorkingButton->visible_focus(0);
+	imWorkingCancelButton = new Fl_Button(150,78,100,26,"Cancel");
+	imWorkingCancelButton->callback(imWorkingCancelCB, nullptr);
+	imWorkingCancelButton->hide();
 	imWorkingWindow->end();
 	imWorkingWindow->hide();
 	
@@ -235,6 +239,7 @@ CsvApplication::~CsvApplication() {
 	delete remainOpenWin;
 	#endif
 
+	delete imWorkingCancelButton;
 	delete imWorkingButton;
 	delete imWorkingWindow;
 }
@@ -533,8 +538,11 @@ void CsvApplication::openFile(std::string path, bool askUser) {
 			windows[winIndex].readWindowPreferences();
 			windows[winIndex].grid->redraw();
 			Fl::check();
-            // automatically arrange column widths
+            // Automatically arrange column widths. This used to run AFTER the progress window
+            // was gone, so on a wide table the user saw a frozen window with no indicator.
+            app.showImWorkingWindow("Arranging columns ...", true);
             app.arrangeColumnsCB(NULL, NULL);
+            app.hideImWorkingWindow();
 			// add file to recent files
 			recentFiles.add(path);
 			updateMenu(winIndex);
@@ -867,140 +875,16 @@ int CsvApplication::getTopWindow() {
 /*
  *	Guesses the definition of the given stream, returning some confidence value with it
  */
-std::pair<CsvDefinition, float> CsvApplication::guessDefinition(std::istream *input) {
-	const int MAXLINES = 10;					// number of lines to read for every test
-	float confidence;
-	CsvParser *parser = new CsvParser();
-	CsvDataStorage localStorage;
-	
-	// Define definitions for probing
-	std::vector< std::tuple<CsvDefinition,int,int> > definitions;
-	definitions.push_back( std::tuple<CsvDefinition, int, int>(CsvDefinition(),0,0) );
-	definitions.push_back( std::tuple<CsvDefinition, int, int>(CsvDefinition(),0,0) );
-	definitions.push_back( std::tuple<CsvDefinition, int, int>(CsvDefinition(),0,0) );
-	definitions.push_back( std::tuple<CsvDefinition, int, int>(CsvDefinition(),0,0) );
-	definitions.push_back( std::tuple<CsvDefinition, int, int>(CsvDefinition(),0,0) );
-	definitions.push_back( std::tuple<CsvDefinition, int, int>(CsvDefinition(),0,0) );
-	definitions.push_back( std::tuple<CsvDefinition, int, int>(CsvDefinition(),0,0) );
-	definitions.push_back( std::tuple<CsvDefinition, int, int>(CsvDefinition(),0,0) );
-	std::get<0>(definitions.at(0)).delimiter = ',';
-	std::get<0>(definitions.at(1)).delimiter = ';';
-	std::get<0>(definitions.at(2)).delimiter = '\t';
-	std::get<0>(definitions.at(3)).delimiter = '|';
-	std::get<0>(definitions.at(4)).delimiter = ':';
-	std::get<0>(definitions.at(5)).delimiter = ',';
-	std::get<0>(definitions.at(6)).delimiter = ';';
-	std::get<0>(definitions.at(6)).delimiter = '*';
-	std::get<0>(definitions.at(5)).escape = '\\';
-	std::get<0>(definitions.at(6)).escape = '\\';
-	
-	// get statistics for all probing definitions
-	for( size_t i = 0; i < definitions.size(); ++i ) {
-		std::pair<int, int> statistics;
-		// reset stream
-		input->clear(); // WHY????
-		input->seekg(0);
-		// clear localTable
-		localStorage.clear();
-		parser->parseCsvStream( input, localStorage, &(std::get<0>(definitions.at(i))), MAXLINES, false );
-		statistics = tableStatistics(localStorage);
-		// not so commonly used seperators and escape characters: decrease statistics value
-		if(
-			std::get<0>(definitions.at(i)).delimiter == ':' ||
-			std::get<0>(definitions.at(i)).delimiter == '|' ||
-			std::get<0>(definitions.at(i)).escape == '\\' ||
-				std::get<0>(definitions.at(i)).escape == '*'
-		) {
-			statistics.first = statistics.first * 70 / 100;
-		}
-		std::get<1>(definitions.at(i)) = statistics.first;
-		if( statistics.first <= 1 && statistics.second == 0) {
-			// if statistics is (1,0), sort it at the end
-			std::get<2>(definitions.at(i)) = 999;
-		} else {
-			std::get<2>(definitions.at(i)) = statistics.second;
-		}
-		#ifdef DEBUG
-		printf("CSV = '%c' => %d / %d\n", std::get<0>(definitions.at(i)).delimiter, statistics.first, statistics.second);
-		#endif
-	}
-	
-	// sort probes: 3rd element INC, 2nd element DESC (C++14)
-	std::sort(begin(definitions), end(definitions), [](auto &t1, auto &t2) {
-		if( std::get<2>(t1) == std::get<2>(t2) ) {
-			return std::get<1>(t1) > std::get<1>(t2);
-		}
-		return std::get<2>(t1) < std::get<2>(t2);
-	});
-	
-	confidence = 1.0;
-	// if there's no definition with zero variance: reduce confidence
-	if( std::get<2>(definitions[0]) > 0 ) {
-		confidence /= 2;
-	}
-	// if there are at least two definitions with the same number of columns: reduce confidence
-	if( std::get<1>(definitions[0]) == std::get<1>(definitions[1]) ) {
-		confidence /= 2;
-	}
-	// improve confidence, if it's a typical CSV separator
-	if( std::get<0>(definitions.at(0)).delimiter == ',' || std::get<0>(definitions.at(0)).delimiter == '\t' ) {
-		confidence += (1.0 - confidence) * 0.5;
-	}
-	
-	// clear and reset
-	delete(parser);
-	input->clear();
-	input->seekg(0);
-	return {std::get<0>(definitions.at(0)), confidence};
-}
-
-
-
-/*
- *	Returns {Number of Cols, Some kind of Variance} of the data in localStorage
- *	Variance: number of rows that are shorter than the longest row
- *
- *	@return		std::pair		(Number of Columns, Number of rows that are shorter than longest row)
- */
-std::pair<table_index_t, table_index_t> CsvApplication::tableStatistics(CsvDataStorage localStorage) {
-	table_index_t maxCols = 0;
-	table_index_t shorterRows = 0;
-
-	// table is empty
-	if( localStorage.rows() == 0 ) {
-		return {0, 0};
-	}
-	// table has just one row
-	if( localStorage.rows() == 1) {
-		return { static_cast<table_index_t>(localStorage.rawRow(0).size()), 0 };
-	}
-	// get maximum columns
-	for( table_index_t r = 1; r < localStorage.rows(); ++r ) {
-		if( (table_index_t) localStorage.rawRow(r).size() > maxCols ) {
-			maxCols = localStorage.rawRow(r).size();
-		}
-	}
-	// count number of shorter rows
-	for( table_index_t r = 1; r < localStorage.rows(); ++r ) {
-		if( (table_index_t) localStorage.rawRow(r).size() < maxCols ) {
-			++shorterRows;
-		}
-	}
-	return {maxCols, shorterRows};
-}
-
-
 /*
  *	Returns guessed encoding and the length of a BOM sequence – or zero if no BOM is present.
  *	TODO remove 'bom' as it's not needed
  */
-std::pair<CsvDefinition::Encodings, int> CsvApplication::guessEncoding(std::istream *input, long streamLength) {
-	#ifdef DEBUG
-	CsvDefinition::BOMs bom = CsvDefinition::BOM_NONE;
-	#endif
+std::pair<CsvDefinition::Encodings, int> CsvApplication::guessEncoding(std::istream *input, int64_t streamLength) {
 	CsvDefinition::Encodings enc = CsvDefinition::ENC_NONE;
 	int bomBytes = 0;
-	unsigned char octet[4];
+	// zero-initialised on purpose: for files shorter than 4 bytes the read() calls below
+	// leave the tail untouched, and the BOM comparisons would read uninitialised memory
+	unsigned char octet[4] = {0, 0, 0, 0};
 	
 	
 	// reset stream
@@ -1018,43 +902,11 @@ std::pair<CsvDefinition::Encodings, int> CsvApplication::guessEncoding(std::istr
 	input->read((char *) &octet + 2, 1);
 	input->read((char *) &octet + 3, 1);
 	
-	if( octet[0] == 0xEF && octet[1] == 0xBB && octet[2] == 0xBF ) {
-		// UTF8 mit BOM
-		#ifdef DEBUG
-		bom = CsvDefinition::BOM_UTF8;
-		#endif
-		bomBytes = 3;
-		enc = CsvDefinition::ENC_UTF8;
-	} else if( octet[0] == 0x00 && octet[1] == 0x00 && octet[2] == 0xFE && octet[3] == 0xFF ) {
-		// UTF32BE
-		#ifdef DEBUG
-		bom = CsvDefinition::BOM_UTF32BE;
-		#endif
-		bomBytes = 4;
-		enc = CsvDefinition::ENC_UTF32BE;
-	} else if( octet[0] == 0xFF && octet[1] == 0xFE && octet[2] == 0x00 && octet[2] == 0x00 ) {
-		// UTF32LE
-		#ifdef DEBUG
-		bom = CsvDefinition::BOM_UTF32LE;
-		#endif
-		bomBytes = 4;
-		enc = CsvDefinition::ENC_UTF32LE;
-	} else if( octet[0] == 0xFE && octet[1] == 0xFF ) {
-		// UTF16BE
-		#ifdef DEBUG
-		bom = CsvDefinition::BOM_UTF16BE;
-		#endif
-		bomBytes = 2;
-		enc = CsvDefinition::ENC_UTF16BE;
-	} else if( octet[0] == 0xFF && octet[1] == 0xFE ) {
-		// UTF16LE
-		#ifdef DEBUG
-		bom = CsvDefinition::BOM_UTF16LE;
-		#endif
-		bomBytes = 2;
-		enc = CsvDefinition::ENC_UTF16LE;
-	}
-	
+	enc = CsvDefinition::fromBom(octet, bomBytes);
+	#ifdef DEBUG
+	printf("BOM bytes: %d\n", bomBytes);
+	#endif
+
 	// Falls kein BOM auf UTF-8 testen (falls Datei nicht zu groß ist)
 	if( streamLength < TCRUNCHER_NUM_UTF8_TEST_BYTES && utf8::is_valid(it, eos) ) {
 		enc = CsvDefinition::ENC_UTF8;
@@ -1062,7 +914,7 @@ std::pair<CsvDefinition::Encodings, int> CsvApplication::guessEncoding(std::istr
 	
 	
 	#ifdef DEBUG
-	printf("BOM: %d\nENC: %d\n", bom, enc);
+	printf("ENC: %d\n", enc);
 	#endif
 	
 	
@@ -1531,7 +1383,7 @@ void CsvApplication::paste(bool askUser, bool fillSelection) {
 	}
 
 	// guess properties
-	guessedDefinition = app.guessDefinition(&input);
+	guessedDefinition = CsvGuess::definition(&input);
 	definition = guessedDefinition.first;
 	definition.encoding = CsvDefinition::ENC_UTF8;
 	
@@ -2806,10 +2658,16 @@ void CsvApplication::arrangeColumnsCB(Fl_Widget *, void *) {
     std::vector<table_index_t> content_length;
     std::vector<float> content_length_relative;
 
+    // One pass over the probed rows for ALL columns – calling maximumContentLength() per
+    // column would rescan every row string from byte zero once per column.
+    std::vector<std::pair<int, int>> column_lengths =
+        windows[winIndex].table->columnContentLengths(TCRUNCHER_MAX_PROBE_ROWS_ARRANGE_COLS);
+
     // Calculate width of all columns and find maximum width for each column
     for( table_index_t c = 0; c < windows[winIndex].table->getNumberCols(); ++c ) {
         all_columns_width += windows[winIndex].grid->col_width(c);
-        std::pair<int, int> col_length_data = windows[winIndex].table->maximumContentLength(c, TCRUNCHER_MAX_PROBE_ROWS_ARRANGE_COLS);
+        std::pair<int, int> col_length_data =
+            ( c < (table_index_t) column_lengths.size() ) ? column_lengths[(size_t) c] : std::make_pair(0, 0);
         int col_length = std::min( col_length_data.second, max_column_length);
         col_length = std::max(col_length, min_column_length);
         content_length.push_back(col_length);
@@ -3383,10 +3241,19 @@ CsvMenu *CsvApplication::getAppMenuBar() {
 }
 
 
-void CsvApplication::showImWorkingWindow(std::string message, bool showAlways) {
+void CsvApplication::showImWorkingWindow(std::string message, bool showAlways, std::function<void()> onCancel) {
 	int winIndex = getTopWindow();
 	if( windows[winIndex].table->getNumberRows() > 10000 || showAlways ) {
 		windows[winIndex].grid->allowEvents(false);
+		imWorkingCancelHandler = onCancel;
+		if( onCancel ) {
+			// make room for the button and show it
+			imWorkingButton->resize(10, 10, 380, 62);
+			imWorkingCancelButton->show();
+		} else {
+			imWorkingButton->resize(10, 10, 380, 100);
+			imWorkingCancelButton->hide();
+		}
 		imWorkingWindow->copy_label("Processing");
 		imWorkingWindow->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
 		imWorkingButton->copy_label(message.c_str());
@@ -3401,9 +3268,15 @@ void CsvApplication::showImWorkingWindow(std::string message, bool showAlways) {
 void CsvApplication::showImWorkingWindowCB(Fl_Widget *, long ) {
 	// intentionally empty: showImWorkingWindow must not be closed by user
 }
+void CsvApplication::imWorkingCancelCB(Fl_Widget *, void *) {
+	if( app.imWorkingCancelHandler )
+		app.imWorkingCancelHandler();
+}
 void CsvApplication::hideImWorkingWindow() {
 	int winIndex = getTopWindow();
 	windows[winIndex].grid->allowEvents(true);
+	imWorkingCancelHandler = nullptr;
+	imWorkingCancelButton->hide();
 	imWorkingWindow->hide();
 	Fl::check();
 }

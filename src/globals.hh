@@ -165,6 +165,33 @@ public:
 	bool cancelled = false;							// Used by setTypeByUser() to signal a user abortion
 	QuoteStyles quoteStyle = QUOTE_STYLE_RFC;		// the quote style used for exports
 	
+	/*
+	 *	Maps the first four bytes of a file to the encoding its byte-order mark declares, and
+	 *	reports the BOM's length. `octet` must be zero-padded when the file is shorter than
+	 *	four bytes.
+	 *
+	 *	The UTF-32LE test used to compare octet[2] twice. That is not harmless: in UTF-16LE the
+	 *	low byte comes first, so octet[2] is the LOW byte of the first character — any UTF-16LE
+	 *	file starting with U+xx00 (\u4E00 and much of CJK) matched FF FE 00 00 and was reported
+	 *	as UTF-32LE, which the reader cannot decode, so the file opened as an empty table.
+	 *	Testing octet[3] is the actual UTF-32LE BOM and still matches every real one.
+	 */
+	static Encodings fromBom(const unsigned char octet[4], int& bomBytes) {
+		if( octet[0] == 0xEF && octet[1] == 0xBB && octet[2] == 0xBF ) {
+			bomBytes = 3;  return ENC_UTF8;
+		} else if( octet[0] == 0x00 && octet[1] == 0x00 && octet[2] == 0xFE && octet[3] == 0xFF ) {
+			bomBytes = 4;  return ENC_UTF32BE;
+		} else if( octet[0] == 0xFF && octet[1] == 0xFE && octet[2] == 0x00 && octet[3] == 0x00 ) {
+			bomBytes = 4;  return ENC_UTF32LE;
+		} else if( octet[0] == 0xFE && octet[1] == 0xFF ) {
+			bomBytes = 2;  return ENC_UTF16BE;
+		} else if( octet[0] == 0xFF && octet[1] == 0xFE ) {
+			bomBytes = 2;  return ENC_UTF16LE;
+		}
+		bomBytes = 0;
+		return ENC_NONE;
+	}
+
 	static std::string getEncodingName(Encodings encoding) {
 		std::string str = "";
 		switch( encoding ) {

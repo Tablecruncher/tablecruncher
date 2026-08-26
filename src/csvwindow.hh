@@ -57,6 +57,7 @@
 #include "csvtable.hh"
 #include "csvapplication.hh"
 #include "csvparser.hh"
+#include "mappedfile.hh"
 
 
 namespace ui_icons {

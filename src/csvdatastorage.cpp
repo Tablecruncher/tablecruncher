@@ -62,8 +62,10 @@ void CsvDataStorage::resize(table_index_t R, table_index_t C) {
 	table_index_t old_columns = columns();
 
 	if( C > old_columns ) {
+		// build the padding once – this used to allocate a fresh string for every row
+		const std::string pad = emptyCellsString(C - old_columns);
 		for( table_index_t i = 0; i < old_rows; ++i) {
-			tableData.at(i) += emptyCellsString(C - old_columns);
+			tableData.at(i) += pad;
 		}
 	}
 	if( R > 0 && R > rows() ) {
@@ -74,6 +76,20 @@ void CsvDataStorage::resize(table_index_t R, table_index_t C) {
 	}
 	if( C > old_columns ) {
 		numColumns = C;
+	}
+}
+
+
+/**
+	reserveRows(size_t n)
+
+	Reserve capacity for `n` rows. Purely an optimisation: without it a bulk load
+	reallocates and moves millions of std::strings, which both costs time and spikes
+	peak RSS by ~1.5x. Never shrinks and never changes rows() or columns().
+ */
+void CsvDataStorage::reserveRows(size_t n) {
+	if( n > tableData.capacity() ) {
+		tableData.reserve(n);
 	}
 }
 
@@ -95,7 +111,7 @@ void CsvDataStorage::clear() {
 
 	Returns number of rows
  */
-table_index_t CsvDataStorage::rows() {
+table_index_t CsvDataStorage::rows() const {
 	return (table_index_t) tableData.size();
 }
 
@@ -105,7 +121,7 @@ table_index_t CsvDataStorage::rows() {
 
 	Returns number of columns
  */
-table_index_t CsvDataStorage::columns() {
+table_index_t CsvDataStorage::columns() const {
 	return numColumns;
 }
 
@@ -122,14 +138,14 @@ void CsvDataStorage::sort(table_index_t column, bool ascending, int sortType) {
 	}
 
 	long counter = 0;
-	std::sort( tableData.begin(), tableData.end(), [&column, &ascending, &sortType, &counter](const auto& lhs, const auto& rhs) {
+	std::sort( tableData.begin(), tableData.end(), [this, &column, &ascending, &sortType, &counter](const auto& lhs, const auto& rhs) {
 		std::string s1 = getColumn(lhs, column);
 		std::string s2 = getColumn(rhs, column);
 		double d1, d2;
 		std::string lowerS1;
 		std::string lowerS2;
-		if( counter % 50000 == 0 ) {
-			Fl::check();
+		if( counter % 50000 == 0 && progressCallback ) {
+			progressCallback((size_t) counter);
 		}
 		++counter;
 		switch( sortType ) {
@@ -178,6 +194,18 @@ void CsvDataStorage::sort(table_index_t column, bool ascending, int sortType) {
 
 
 /**
+	setProgressCallback(std::function<void(size_t)> cb)
+
+	Injected by the UI layer so that sort() can keep the event loop alive without
+	CsvDataStorage having to know about FLTK. Pass an empty std::function to detach.
+ */
+void CsvDataStorage::setProgressCallback(std::function<void(size_t)> cb) {
+	progressCallback = std::move(cb);
+}
+
+
+
+/**
 	get(long R, long C)
 
 	Get content of a single cell.
@@ -203,6 +231,41 @@ std::string CsvDataStorage::getRow(table_index_t R) {
 	return tableData.at(R);
 }
 
+
+
+/**
+	assembleFrom(std::vector<CsvDataStorage>& pieces, table_index_t columns)
+
+	Concatenates the pieces of a parallel load into one table.
+
+	Kept as a single operation because the intermediate states are not valid tables: appending
+	rows does not update numColumns, and setting numColumns does not pad rows. Exposing those
+	two halves separately would put a way to build an inconsistent CsvDataStorage — one whose
+	numColumns disagrees with its row contents — on the public API.
+
+	Every row in every piece must already hold exactly `columns` glue-separated fields.
+ */
+void CsvDataStorage::assembleFrom(std::vector<CsvDataStorage>& pieces, table_index_t columns) {
+	size_t total = 0;
+	for( const CsvDataStorage& piece : pieces )
+		total += piece.tableData.size();
+
+	tableData.clear();
+	tableData.shrink_to_fit();
+	tableData.reserve(total);
+
+	for( CsvDataStorage& piece : pieces ) {
+		tableData.insert( tableData.end(),
+		                  std::make_move_iterator(piece.tableData.begin()),
+		                  std::make_move_iterator(piece.tableData.end()) );
+		// release each piece's header array as we go, so peak overhead is one piece
+		piece.tableData.clear();
+		piece.tableData.shrink_to_fit();
+		piece.numColumns = 0;
+	}
+
+	numColumns = columns;
+}
 
 
 /**
@@ -265,11 +328,15 @@ std::vector<std::string> CsvDataStorage::rawRow(table_index_t R) {
 
 	Adds row to the end of the table data
  */
-void CsvDataStorage::push_back(std::string rowString) {
+void CsvDataStorage::push_back(const std::string& rowString) {
 	tableData.push_back(rowString);
 }
 
-void CsvDataStorage::push_back(std::vector<std::string> row) {
+void CsvDataStorage::push_back(std::string&& rowString) {
+	tableData.push_back(std::move(rowString));
+}
+
+void CsvDataStorage::push_back(const std::vector<std::string>& row) {
 	tableData.push_back(mergeString(row));
 }
 
@@ -279,11 +346,11 @@ void CsvDataStorage::push_back(std::vector<std::string> row) {
 	push_front(std::vector<std::string> > row)
 	Adds row to the beginning of the table data
  */
-void CsvDataStorage::push_front(std::string row) {
+void CsvDataStorage::push_front(const std::string& row) {
 		// TODO edit length histogram!?
 	tableData.insert(tableData.begin(), row);
 }
-void CsvDataStorage::push_front(std::vector<std::string> row) {
+void CsvDataStorage::push_front(const std::vector<std::string>& row) {
 		// TODO edit length histogram!?
 	tableData.insert(tableData.begin(), mergeString(row));
 }
@@ -410,12 +477,66 @@ bool CsvDataStorage::cellContainsLineBreak(table_index_t R, table_index_t C) {
 	return get(R,C).find("\n") != std::string::npos;
 }
 
+
+/**
+	columnContentLengths(table_index_t maxProbeRows)
+
+	Maximum and average content length, in bytes, for every column at once.
+
+	The obvious formulation – ask get(R,C) for each cell – rescans each row string from byte
+	zero for every column, so probing C columns of a row costs O(L*C/2). On a 1000-column,
+	10 KB-per-row table that is tens of billions of byte operations. This walks each row
+	exactly once instead.
+
+	Parity with the per-cell version is deliberate: the average uses integer division by the
+	number of probed rows, and a row holding fewer than columns() fields contributes length 0
+	for the missing tail, matching get()'s out-of-range "".
+ */
+std::vector<std::pair<int,int>> CsvDataStorage::columnContentLengths(table_index_t maxProbeRows) {
+	const table_index_t C = columns();
+	std::vector<std::pair<int,int>> out;
+	if( C <= 0 )
+		return out;
+	out.assign((size_t) C, {0,0});
+
+	table_index_t probeRows = rows();
+	if( maxProbeRows > 0 )
+		probeRows = std::min(probeRows, maxProbeRows);
+	if( probeRows <= 0 )
+		return out;
+
+	std::vector<int>      maxLen((size_t) C, 0);
+	std::vector<uint64_t> sumLen((size_t) C, 0);
+
+	for( table_index_t r = 0; r < probeRows; ++r ) {
+		const std::string& row = tableData[(size_t) r];
+		const size_t n = row.size();
+		table_index_t c = 0;
+		size_t fieldStart = 0;
+		for( size_t i = 0; i <= n; ++i ) {
+			if( i == n || static_cast<unsigned char>(row[i]) == TCRUNCHER_UTF_8_DELIMITER ) {
+				if( c < C ) {
+					const int len = (int)(i - fieldStart);
+					if( len > maxLen[(size_t) c] ) maxLen[(size_t) c] = len;
+					sumLen[(size_t) c] += (uint64_t) len;
+				}
+				++c;
+				fieldStart = i + 1;
+			}
+		}
+	}
+
+	for( table_index_t c = 0; c < C; ++c )
+		out[(size_t) c] = { maxLen[(size_t) c], (int)(sumLen[(size_t) c] / (uint64_t) probeRows) };
+	return out;
+}
+
 /**
 	splitString()
 
 	Splits the given string at the defined internal CSV delimiter
  */
-std::vector<std::string> CsvDataStorage::splitString(std::string str) {
+std::vector<std::string> CsvDataStorage::splitString(const std::string& str) {
 	std::vector<std::string> splitted;
 	std::string tempStr = "";
 	size_t str_size = str.size();
@@ -437,8 +558,12 @@ std::vector<std::string> CsvDataStorage::splitString(std::string str) {
 
 	Merges the given vector-of-strings with the defined internal CSV delimiter
 */
-std::string CsvDataStorage::mergeString(std::vector<std::string> row) {
-	std::string merged = "";
+std::string CsvDataStorage::mergeString(const std::vector<std::string>& row) {
+	std::string merged;
+	size_t total = row.empty() ? 0 : row.size() - 1;			// one glue byte between every pair of fields
+	for( auto const& field : row )
+		total += field.size();
+	merged.reserve(total);
 	for(size_t i = 0; i < row.size(); ++i ) {
 		if( i > 0 )
 			merged.push_back( static_cast<char>(CsvDataStorage::TCRUNCHER_UTF_8_DELIMITER) );
@@ -455,7 +580,7 @@ std::string CsvDataStorage::mergeString(std::vector<std::string> row) {
 	a#bcd#ef#hij
     0123456789ab
  */
-std::string CsvDataStorage::getColumn(std::string rowString, table_index_t column) {
+std::string CsvDataStorage::getColumn(const std::string& rowString, table_index_t column) {
 	std::pair<table_index_t,table_index_t> fromTo = getColumnIndizes(rowString, column);
 	if( fromTo.second - fromTo.first - 1 <= (table_index_t) rowString.size() && fromTo.second > fromTo.first ) {
 		return rowString.substr(fromTo.first + 1, (fromTo.second - fromTo.first - 1));
@@ -464,7 +589,7 @@ std::string CsvDataStorage::getColumn(std::string rowString, table_index_t colum
 	}
 }
 
-std::pair<table_index_t,table_index_t> CsvDataStorage::getColumnIndizes(std::string rowString, table_index_t column) {
+std::pair<table_index_t,table_index_t> CsvDataStorage::getColumnIndizes(const std::string& rowString, table_index_t column) {
 	bool colFound = false;
 	size_t str_size = rowString.size();
 	table_index_t fromIdx = -1;
@@ -492,7 +617,7 @@ std::pair<table_index_t,table_index_t> CsvDataStorage::getColumnIndizes(std::str
 }
 
 
-std::string CsvDataStorage::setColumn(std::string rowString, table_index_t column, std::string content) {
+std::string CsvDataStorage::setColumn(const std::string& rowString, table_index_t column, const std::string& content) {
 	std::vector<std::string> row = splitString(rowString);
 	if( (table_index_t) row.size() < numColumns ) {
 		row.resize(numColumns, "");

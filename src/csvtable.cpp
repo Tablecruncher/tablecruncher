@@ -30,6 +30,8 @@
 #include "csvtable.hh"
 #include "macro.hh"
 
+#include <FL/Fl.H>		// sortTable() injects an Fl::check() progress callback into CsvDataStorage
+
 
 extern Macro macro;		// to use JS for searching
 
@@ -828,7 +830,11 @@ int CsvTable::exportJSON(std::string path, void (*cb)(const char*, void *), void
  *	sortType 0:Numerical, 1:String, 2:String (ignore case) – default: 1
  */
 void CsvTable::sortTable(table_index_t column, bool ascending, int sortType) {
+	// CsvDataStorage knows nothing about FLTK; inject the event pump so that a long
+	// sort keeps repainting exactly as it did when sort() called Fl::check() itself.
+	storage.setProgressCallback( [](size_t){ Fl::check(); } );
 	storage.sort(column, ascending, sortType);
+	storage.setProgressCallback( nullptr );
 }
 
 
@@ -1101,25 +1107,14 @@ bool CsvTable::cellContainsLineBreak(table_index_t R, table_index_t C) {
 
 
 /*
-    Returns maximum length and average length of the contents of a given column (in std::string bytes)
+    Returns maximum and average content length for EVERY column, in one pass per row.
+
+    The per-cell formulation this replaces rescanned each row string from byte zero for every
+    column — O(row length * columns) per row, which turned a wide table into a multi-minute
+    freeze after loading.
  */
-std::pair<int, int> CsvTable::maximumContentLength(table_index_t col, table_index_t max_probe_rows) {
-    int max_length = 0, average_length = 0;
-    uint64_t sum_length = 0;
-    table_index_t probe_rows = getNumberRows();
-	if( max_probe_rows > 0 )
-		probe_rows = std::min(probe_rows, max_probe_rows);
-    if( probe_rows > 0 ) {
-        for(table_index_t r = 0; r < probe_rows; ++r) {
-            int cell_length = getCell(r, col).length();
-            if( cell_length > max_length ) {
-                max_length = cell_length;
-            }
-            sum_length += cell_length;
-        }
-        average_length = (int)(sum_length / probe_rows);
-    }
-    return std::make_pair(max_length, average_length);
+std::vector<std::pair<int, int>> CsvTable::columnContentLengths(table_index_t max_probe_rows) {
+    return storage.columnContentLengths(max_probe_rows);
 }
 
 

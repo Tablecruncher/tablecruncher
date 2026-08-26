@@ -21,6 +21,11 @@
 
 
 #include "csvwindow.hh"
+#include "csvguess.hh"
+#include "csvloader.hh"
+
+#include <climits>
+#include <thread>
 
 
 
@@ -331,9 +336,11 @@ void CsvWindow::setWindowSlotUsed(bool state) {
  */
 bool CsvWindow::loadFile(std::string filename, bool askUser, bool reopen) {
 	std::ifstream input;
-	long fileLength;
+	MappedFile mf;
+	Utf8ValidationResult validation;
+	int64_t fileLength;
 	std::stringstream sstr;
-	CsvParser *parser = new CsvParser();
+	CsvParser parser;
 	std::pair<CsvDefinition::Encodings, int> guessedEncoding;
 	std::pair<CsvDefinition, float> guessedDefinition;
 	CsvDefinition definition;
@@ -352,11 +359,32 @@ bool CsvWindow::loadFile(std::string filename, bool askUser, bool reopen) {
 	
 	// Length of file: needed for guessEncoding
 	fileLength = Helper::getFileSize(filename);
-	
+
+	//
+	//	Map the whole file once and let every consumer read the same bytes: dialect guessing,
+	//	encoding detection and the parse itself. That removes eight seekg(0) re-reads and a
+	//	full extra streaming pass over the file.
+	//
+	//	NOTE (Windows): the mapping is raw bytes, while `input` is opened in text mode. CRLF
+	//	handling is unaffected – the reader has always treated \r, \r\n and a lone \r
+	//	identically – but a 0x1A (Ctrl-Z) byte no longer truncates the table. That is a
+	//	silent-data-loss bug fixed, and it is observable: such files now open in full.
+	//
+	bool haveBuffer = mf.open(filename);
+	if( haveBuffer )
+		mf.adviseSequential();
+
 	// guess properties
-	guessedDefinition = app.guessDefinition(&input);
+	if( haveBuffer ) {
+		guessedDefinition = CsvGuess::definition(mf.data(), mf.size());
+		// `validation` also tells us whether the parsed region is wholly valid UTF-8, which
+		// is what proves Helper::fixUtf8() is the identity for this file
+		guessedEncoding   = CsvGuess::encoding(mf.data(), mf.size(), validation);
+	} else {
+		guessedDefinition = CsvGuess::definition(&input);
+		guessedEncoding   = CsvApplication::guessEncoding(&input, fileLength);
+	}
 	definition = guessedDefinition.first;
-	guessedEncoding = CsvApplication::guessEncoding(&input, fileLength);
 	definition.encoding = guessedEncoding.first;
 	definition.bomBytes = guessedEncoding.second;
 
@@ -379,9 +407,107 @@ bool CsvWindow::loadFile(std::string filename, bool askUser, bool reopen) {
 	
 	// Tabelle leeren und geparste Daten laden
 	table->clearTable();
-	app.showImWorkingWindow("Opening file ...", true);
-	histogram = parser->parseCsvStream(&input, table->getStorage(), &definition);
-	app.hideImWorkingWindow();
+	// The grid still holds the PREVIOUS table's dimensions, and both updateStatusbar() and
+	// Fl::wait() below dispatch redraws – draw_cell() would then call getCell() on a storage
+	// that is being rebuilt, on another thread for the parallel path. Shrink the grid to
+	// nothing first; it is resized to the real dimensions once the load is done.
+	grid->rows(0);
+	grid->cols(0);
+
+	// planLoad() picks the engine: the istream reader, the mapped buffer, or the mapped
+	// buffer parsed across all cores. It is the only place that decision is made.
+	LoadPlan plan = CsvLoader::planLoad(definition, (uint64_t) std::max<int64_t>(fileLength, 0),
+	                                    validation, haveBuffer, 0, true);
+	#ifdef DEBUG
+	if( plan.path != LoadPath::Parallel ) printf("not loading in parallel: %s\n", plan.reason);
+	#endif
+
+	bool loadCancelled    = false;
+	bool rowLimitExceeded = false;
+
+	if( plan.path == LoadPath::Parallel ) {
+		//
+		//	The load runs on a background coordinator thread that fans out to workers. NO
+		//	worker ever touches a widget or calls Fl::check(), so FLTK stays effectively
+		//	single-threaded and needs no thread-safe build, no Fl::lock and no Fl::awake.
+		//	The modal progress window blocks input that could mutate the table underneath us,
+		//	so "responsive" here means: the window keeps painting and Cancel works.
+		//
+		LoadProgress progress;
+		app.showImWorkingWindow("Opening file ...", true, [&progress]() {
+			progress.cancelRequested.store(true, std::memory_order_relaxed);
+		});
+
+		LoadResult loadResult;
+		std::thread coordinator([&]() {
+			// An escaping exception on a std::thread is an immediate std::terminate, and
+			// bad_alloc is a realistic outcome here. Report it instead of aborting.
+			try {
+				loadResult = CsvLoader::loadParallel(mf.data(), mf.size(), definition, plan,
+				                                     table->getStorage(), progress);
+			} catch( const std::exception& ) {
+				loadResult.failed = true;
+				progress.finished.store(true, std::memory_order_release);
+			}
+		});
+		while( !progress.finished.load(std::memory_order_acquire) ) {
+			updateStatusbar("Parsed " + Helper::groupedIntToString(
+				(int) std::min<long>(progress.rowsDone.load(std::memory_order_relaxed), INT_MAX)) + " lines.");
+			Fl::wait(0.03);				// a timeout, not Fl::check() – don't burn a core spinning
+		}
+		coordinator.join();
+
+		app.hideImWorkingWindow();
+		histogram        = loadResult.histogram;
+		loadCancelled    = loadResult.cancelled;
+		rowLimitExceeded = loadResult.rowLimitExceeded;
+
+		if( loadResult.failed ) {
+			table->clearTable();
+			table->updateInternals();
+			CsvApplication::myFlChoice("", "Ran out of memory while opening this file.", {"Okay"});
+			return false;
+		}
+	} else {
+		const bool useBuffer = ( plan.path == LoadPath::Buffer );
+		// reserve the row vector up front – saves both time and a ~1.5x peak-RSS spike
+		table->getStorage().reserveRows( useBuffer
+			? CsvParser::estimateRowCount(mf.data(), mf.size())
+			: CsvParser::estimateRowCount(input, fileLength) );
+		app.showImWorkingWindow("Opening file ...", true);
+		// CsvParser no longer knows about windows – inject the status bar update it used to do itself
+		parser.onProgress = [this](long rows) {
+			this->updateStatusbar("Parsed " + std::to_string(rows) + " lines.");
+		};
+		if( useBuffer ) {
+			// guessEncoding already proved whether the region is valid UTF-8; without passing
+			// that on, the parser would re-check every line and walk the whole file again
+			histogram = parser.parseCsvBuffer(mf.data(), mf.size(), table->getStorage(), &definition,
+			                                   0, true, validation.validFromBom);
+		} else {
+			histogram = parser.parseCsvStream(&input, table->getStorage(), &definition);
+		}
+		app.hideImWorkingWindow();
+		rowLimitExceeded = parser.rowLimitExceeded;
+	}
+
+	if( loadCancelled ) {
+		table->clearTable();
+		table->updateInternals();
+		updateStatusbar("Opening cancelled.");
+		return false;
+	}
+	if( rowLimitExceeded ) {
+		if( table->getNumberRows() <= 0 ) {
+			// the parallel loader refuses outright rather than hand back a wrapped row count
+			table->clearTable();
+			table->updateInternals();
+			CsvApplication::myFlChoice("", "This file has more rows than Tablecruncher can address.", {"Okay"});
+			return false;
+		}
+		CsvApplication::myFlChoice("Warning", "This file has more rows than Tablecruncher can address. Only the first "
+			+ Helper::groupedIntToString(INT_MAX) + " rows have been loaded.", {"OK"});
+	}
 	table->updateInternals();
 	if( table->getNumberRows() == 0 || table->getNumberCols() == 0 ) {
 		if( askUser ) {
@@ -432,7 +558,6 @@ bool CsvWindow::loadFile(std::string filename, bool askUser, bool reopen) {
 	win->redraw();
 	win->flush();
 	Fl::check();
-	delete(parser);
 	
 	//
 	//	Show warning on large table
