@@ -129,6 +129,13 @@ std::string Helper::groupedIntToString( int num, std::string sep ) {
 
 // fixes UTF8 inplace – replaces invalid octets with replace character
 void Helper::fixUtf8(std::string& str) {
+	// Fast path: for valid UTF-8 the loop below is the identity, so skip the temporary
+	// string, the allocation and the two byte copies entirely. This is the common case –
+	// the parser calls this once per line.
+	if( utf8::is_valid(str.begin(), str.end()) ) {
+		return;
+	}
+
     std::string temp;
 	try {
 	    utf8::replace_invalid(str.begin(), str.end(), back_inserter(temp));
@@ -494,10 +501,17 @@ std::string Helper::padInteger(int num, int length) {
 }
 
 // https://stackoverflow.com/questions/5840148/how-can-i-get-a-files-size-in-c
-long Helper::getFileSize(std::string filename) {
+// _stat64 on Windows, where `long` is only 32 bit and a plain stat() would report a
+// truncated (possibly negative) size for files larger than 2 GB.
+int64_t Helper::getFileSize(const std::string& filename) {
+#ifdef _WIN64
+	struct __stat64 stat_buf;
+	int rc = _stat64(filename.c_str(), &stat_buf);
+#else
 	struct stat stat_buf;
 	int rc = stat(filename.c_str(), &stat_buf);
-	return rc == 0 ? stat_buf.st_size : -1;
+#endif
+	return rc == 0 ? (int64_t) stat_buf.st_size : -1;
 }
 
 

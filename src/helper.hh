@@ -80,7 +80,7 @@ public:
 	static std::string getDirectory(const std::string& path);
 	static std::pair<std::string,std::string> getPathWithoutExtension(const std::string& path);
 	static std::string padInteger(int num, int length);
-	static long getFileSize(std::string filename);
+	static int64_t getFileSize(const std::string& filename);		// 64-bit safe: plain `long` is 32 bit on MSVC
 	static bool guessHasHeader(std::vector<std::string> firstRow);
 	static std::vector<std::string> splitString(std::string sep, std::string str, size_t maxSplits=0);
 	static void dumpVecVec( std::vector<std::vector<std::string>> &vec, size_t maxRows = 10, int colWidth = 10 );

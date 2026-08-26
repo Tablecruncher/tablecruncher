@@ -60,6 +60,11 @@ if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+option(TCRUNCHER_BUILD_TESTS "Build headless parser tests (no FLTK)" OFF)
+
 string(TIMESTAMP NOW "%Y-%m-%dT%H:%M")
 string(TIMESTAMP TODAY "%Y-%m-%d")
 string(TIMESTAMP YEAR "%Y")
@@ -108,6 +113,9 @@ set(SOURCES
     ${SRCDIR}/csvwindow.cpp
     ${SRCDIR}/helper.cpp
     ${SRCDIR}/macro.cpp
+    ${SRCDIR}/mappedfile.cpp
+    ${SRCDIR}/utf8validate.cpp
+    ${SRCDIR}/csvloader.cpp
     ${SRCDIR}/main.cpp
     ${EXTERNAL}/duktape/duktape.c
 )
@@ -152,8 +160,36 @@ elseif(LINUX)
         fontconfig
         Xrender
         X11
-        pthread
         dl
+    )
+endif()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
+
+
+#
+# Headless parser tests. Links WITHOUT FLTK, which is what keeps the data layer honest:
+# if tc_parsecheck compiles, nothing in the parse path reaches into the UI layer.
+#
+if(TCRUNCHER_BUILD_TESTS)
+    add_executable(tc_parsecheck
+        tests/parsecheck.cpp
+        ${SRCDIR}/csvparser.cpp
+        ${SRCDIR}/csvdatastorage.cpp
+        ${SRCDIR}/helper.cpp
+        ${SRCDIR}/mappedfile.cpp
+        ${SRCDIR}/utf8validate.cpp
+        ${SRCDIR}/csvloader.cpp
+    )
+    # src/csvfsm.hh is header-only (templated) – no source entry
+    target_include_directories(tc_parsecheck PRIVATE ${SRCDIR} ${EXTERNAL})
+    target_link_libraries(tc_parsecheck PRIVATE Threads::Threads)
+    if(APPLE)
+        # helper.cpp uses CFBundle* to locate the app bundle's resources
+        target_link_libraries(tc_parsecheck PRIVATE "-framework CoreFoundation")
+    endif()
+    set_target_properties(tc_parsecheck PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
     )
 endif()
 

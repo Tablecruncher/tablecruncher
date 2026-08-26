@@ -141,7 +141,7 @@ public:
 	CsvDataStorage &getStorage();
 	void setStorage(CsvDataStorage &storage);
 	bool cellContainsLineBreak(table_index_t R, table_index_t C);										// returns true if content of that cell contains line breaks (\n)
-    std::pair<int, int> maximumContentLength(table_index_t col, table_index_t max_probe_rows = 0 );     // returns the maximum and average length of the content of the given column (in characters)
+    std::vector<std::pair<int, int>> columnContentLengths(table_index_t max_probe_rows = 0);            // same, for every column at once – one pass per row instead of one per cell
 	
 
 /************************************************************************************

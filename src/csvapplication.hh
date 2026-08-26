@@ -27,6 +27,7 @@
 #include "globals.hh"
 #include "colorthemes.hh"
 #include "csvdatastorage.hh"
+#include "utf8validate.hh"
 #include "csvwindow.hh"
 #include "csvtable.hh"
 #include "csvgrid.hh"
@@ -46,6 +47,7 @@
 #include <iostream>
 #include <queue>
 #include <deque>
+#include <functional>
 
 #ifdef _WIN64
 #include <direct.h>
@@ -211,7 +213,11 @@ public:
 	void changeFontSize(int changeMode);
 	void setUndoMenuItem(bool );
 	static std::pair<CsvDefinition, float> guessDefinition(std::istream *input);		// guesses the CSV definition
-	static std::pair<CsvDefinition::Encodings, int> guessEncoding(std::istream *input, long streamLength=0);
+	static std::pair<CsvDefinition, float> guessDefinition(const char* data, uint64_t len);				// same, over a mapped buffer
+	static std::pair<CsvDefinition::Encodings, int> guessEncoding(std::istream *input, int64_t streamLength=0);
+	// Same, over a mapped buffer. Also hands back the UTF-8 validation it had to run anyway –
+	// the load path needs `validFromBom` to decide whether the parallel engine is safe.
+	static std::pair<CsvDefinition::Encodings, int> guessEncoding(const char* data, uint64_t len, Utf8ValidationResult& validationOut);
 	static CsvDefinition setTypeByUser(CsvDefinition guessedDefinition, std::istream *input, std::string buttonText = "Open");
 	bool isAlreadyOpened(std::string path);
 	static void droppedFileCB(const char *path);
@@ -235,7 +241,9 @@ public:
 	void showOnboardingNextCB(Fl_Widget *w, void *data);
 	void showOnboardingOkCB(Fl_Widget *w, void *data);
 	void showOnboardingCancelCB(Fl_Widget *w, void *data);
-	void showImWorkingWindow(std::string message, bool showAlways = false);
+	// `onCancel`, when set, adds a Cancel button to the progress window and calls this back
+	// when it is pressed. Callers that pass nothing get the button-less window as before.
+	void showImWorkingWindow(std::string message, bool showAlways = false, std::function<void()> onCancel = nullptr);
 	void hideImWorkingWindow();
 	void editSingleCell();
 	static void editSingleCellCB(Fl_Widget *, void *);
@@ -304,6 +312,8 @@ private:
 	bool checkUpdateAllowed = false;
 	My_Fl_Small_Window *imWorkingWindow;
 	Fl_Button *imWorkingButton;
+	Fl_Button *imWorkingCancelButton;
+	std::function<void()> imWorkingCancelHandler;
 	int lastSingleEditWinWidth = 0;
 	int lastSingleEditWinHeight = 0;
 	std::string lastSplitString = "";
@@ -320,7 +330,10 @@ private:
 	RecentFiles recentFiles;
 
 
-	static std::pair<table_index_t, table_index_t> tableStatistics(CsvDataStorage localStorage);	// Calculates the maximum number of columns and the variance of columns
+	static std::vector< std::tuple<CsvDefinition,int,int> > makeProbeDefinitions();						// the eight candidate dialects
+	static void scoreProbe(std::tuple<CsvDefinition,int,int>& entry, std::pair<int,int> statistics);	// folds one probe result into its entry
+	static std::pair<CsvDefinition, float> rankProbeDefinitions(std::vector< std::tuple<CsvDefinition,int,int> >& definitions);
+	static std::pair<table_index_t, table_index_t> tableStatistics(CsvDataStorage& localStorage);	// Calculates the maximum number of columns and the variance of columns
 	static void showPreview(struct previewTableStruct);		// parses input and shows data
 	// Callbacks for setTypeByUser()
 	static void setTypeByUser_Done_CB(Fl_Widget *, long data);
@@ -342,6 +355,7 @@ private:
 	static void updateMacroBrowserList(Fl_Browser *macroList, int selected=0);
 	static int selectMacroBrowserEntry(Fl_Browser *macroList, std::string );
 	static void showImWorkingWindowCB(Fl_Widget *, long );
+	static void imWorkingCancelCB(Fl_Widget *, void *);
 	static void dumpWindows();
 };
 
