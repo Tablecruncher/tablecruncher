@@ -107,6 +107,26 @@ w("single_column",    "a\nb\nc\n")
 w("single_delimiter", ",")
 w("header_only",      "name,age,city\n")
 
+# ------------------------------------------------------ JSON inside a CSV column
+# RFC-quoted JSON payloads. The JSON is full of ':' and ',', so a dialect guesser that just
+# prefers "whichever delimiter yields the most columns" picks ':' and shreds every row. The
+# giveaway is that ':' leaves the header as ONE field while exploding the data rows.
+_req  = '{""user"": {""id"": ""566674135""}, ""amount"": """", ""list"": [{""code"": ""ABC123""}], ""skip"": true}'
+_resp = '{""errors"": [{""code"": 759, ""message"": ""redeem failed""}], ""customer"": {""id"": 566674135, ""profiles"": [{""fields"": {}, ""name"": ""chi que""}]}, ""status"": {""code"": 400, ""message"": ""series has expired""}}'
+_err  = '{""error"": ""ABC123:series has expired""}'
+_rows = ["id,tenant_id,trace_id,req_body,resp_body,created_at,err_body,version"]
+for _i in range(6):
+    _rows.append('%d,101,f4bce9098bf89a62,"%s","%s",2026-06-06 00:55:38.534355+00,"%s",v2'
+                 % (5226 + _i, _req, _resp, _err))
+w("json_in_column", "\n".join(_rows) + "\n")
+
+# the same payloads in a semicolon-delimited file
+_semi = ["id;req_body;created_at"]
+for _i in range(6):
+    _semi.append('%d;"%s";2026-06-06 00:55:38+00' % (5226 + _i, _req))
+w("json_semicolon", "\n".join(_semi) + "\n", delim="SEMI")
+
+
 # ------------------------------------------------------------------------ shape
 # a single quoted field spanning many lines -> a chunk fully inside it yields NONE
 giant = 'a,"' + ("filler line inside one giant quoted field\n" * 400) + '",z\nnext,row,here\n'

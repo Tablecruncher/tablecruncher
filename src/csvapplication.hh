@@ -212,12 +212,7 @@ public:
 	static void aboutCB(Fl_Widget *, void *);
 	void changeFontSize(int changeMode);
 	void setUndoMenuItem(bool );
-	static std::pair<CsvDefinition, float> guessDefinition(std::istream *input);		// guesses the CSV definition
-	static std::pair<CsvDefinition, float> guessDefinition(const char* data, uint64_t len);				// same, over a mapped buffer
 	static std::pair<CsvDefinition::Encodings, int> guessEncoding(std::istream *input, int64_t streamLength=0);
-	// Same, over a mapped buffer. Also hands back the UTF-8 validation it had to run anyway –
-	// the load path needs `validFromBom` to decide whether the parallel engine is safe.
-	static std::pair<CsvDefinition::Encodings, int> guessEncoding(const char* data, uint64_t len, Utf8ValidationResult& validationOut);
 	static CsvDefinition setTypeByUser(CsvDefinition guessedDefinition, std::istream *input, std::string buttonText = "Open");
 	bool isAlreadyOpened(std::string path);
 	static void droppedFileCB(const char *path);
@@ -330,10 +325,6 @@ private:
 	RecentFiles recentFiles;
 
 
-	static std::vector< std::tuple<CsvDefinition,int,int> > makeProbeDefinitions();						// the eight candidate dialects
-	static void scoreProbe(std::tuple<CsvDefinition,int,int>& entry, std::pair<int,int> statistics);	// folds one probe result into its entry
-	static std::pair<CsvDefinition, float> rankProbeDefinitions(std::vector< std::tuple<CsvDefinition,int,int> >& definitions);
-	static std::pair<table_index_t, table_index_t> tableStatistics(CsvDataStorage& localStorage);	// Calculates the maximum number of columns and the variance of columns
 	static void showPreview(struct previewTableStruct);		// parses input and shows data
 	// Callbacks for setTypeByUser()
 	static void setTypeByUser_Done_CB(Fl_Widget *, long data);

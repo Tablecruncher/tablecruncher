@@ -105,6 +105,7 @@ set(SOURCES
     ${SRCDIR}/csvapplication.cpp
     ${SRCDIR}/csvdatastorage.cpp
     ${SRCDIR}/csvgrid.cpp
+    ${SRCDIR}/csvguess.cpp
     ${SRCDIR}/csvmenu.cpp
     ${SRCDIR}/csvparser.cpp
     ${SRCDIR}/csvtable.cpp
@@ -180,6 +181,7 @@ if(TCRUNCHER_BUILD_TESTS)
         ${SRCDIR}/mappedfile.cpp
         ${SRCDIR}/utf8validate.cpp
         ${SRCDIR}/csvloader.cpp
+        ${SRCDIR}/csvguess.cpp
     )
     # src/csvfsm.hh is header-only (templated) – no source entry
     target_include_directories(tc_parsecheck PRIVATE ${SRCDIR} ${EXTERNAL})

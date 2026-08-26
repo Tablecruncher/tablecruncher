@@ -35,6 +35,7 @@
 #include "mappedfile.hh"
 #include "utf8validate.hh"
 #include "csvloader.hh"
+#include "csvguess.hh"
 #include "utf8.h"
 
 
@@ -599,6 +600,90 @@ static int reuseCheck(const std::string& dir) {
 }
 
 
+/* ------------------------------------------------------------- dialect guessing */
+
+static std::string charToken(char c) {
+	switch( c ) {
+		case ',':  return "COMMA";
+		case ';':  return "SEMI";
+		case '\t': return "TAB";
+		case '|':  return "PIPE";
+		case ':':  return "COLON";
+		case '*':  return "ASTER";
+		case '"':  return "DQUOTE";
+		case '\\': return "BSLASH";
+		default:   return std::string(1, c);
+	}
+}
+
+
+/*
+ *	What CsvGuess makes of one file, as a single stable line.
+ */
+static std::string guessLine(const std::string& path) {
+	MappedFile mf;
+	if( !mf.open(path) )
+		return "<unreadable>";
+	std::pair<CsvDefinition, float> d = CsvGuess::definition(mf.data(), mf.size());
+	Utf8ValidationResult v;
+	std::pair<CsvDefinition::Encodings, int> e = CsvGuess::encoding(mf.data(), mf.size(), v);
+	char buf[256];
+	snprintf(buf, sizeof(buf), "%s\t%s\t%s\t%.2f\t%s\t%d",
+	         charToken(d.first.delimiter).c_str(), charToken(d.first.quote).c_str(),
+	         charToken(d.first.escape).c_str(), d.second,
+	         CsvDefinition::getEncodingName(e.first).c_str(), e.second);
+	return buf;
+}
+
+
+/*
+ *	Dialect guessing decides how every file opens, and it decides silently — a confident wrong
+ *	answer never shows the format dialog. These goldens make any change to it visible.
+ */
+static int guesses(const std::string& dir, bool write) {
+	std::vector<ManifestEntry> entries;
+	if( !readManifest(dir, entries) ) return 2;
+
+	std::vector<std::string> lines;
+	std::vector<std::string> seen;
+	for( auto& e : entries ) {
+		if( std::find(seen.begin(), seen.end(), e.name) != seen.end() ) continue;	// aliases
+		seen.push_back(e.name);
+		lines.push_back(e.name + "\t" + guessLine(dir + "/" + e.name));
+	}
+
+	const std::string gpath = dir + "/guesses.tsv";
+	if( write ) {
+		std::ofstream out(gpath, std::ios::trunc);
+		if( !out ) { fprintf(stderr, "cannot write %s\n", gpath.c_str()); return 2; }
+		for( auto& l : lines ) out << l << "\n";
+		printf("wrote %zu dialect guesses to %s\n", lines.size(), gpath.c_str());
+		return 0;
+	}
+
+	std::ifstream in(gpath);
+	if( !in ) { fprintf(stderr, "cannot read %s (run --guess-write first)\n", gpath.c_str()); return 2; }
+	std::vector<std::string> expected;
+	std::string l;
+	while( std::getline(in, l) ) if( !l.empty() ) expected.push_back(l);
+
+	int bad = 0;
+	if( expected.size() != lines.size() ) {
+		fprintf(stderr, "guess count mismatch: have %zu, expected %zu\n", lines.size(), expected.size());
+		++bad;
+	}
+	for( size_t i = 0; i < std::min(expected.size(), lines.size()); ++i ) {
+		if( expected[i] != lines[i] ) {
+			fprintf(stderr, "GUESS CHANGED\n  was: %s\n  now: %s\n", expected[i].c_str(), lines[i].c_str());
+			++bad;
+		}
+	}
+	if( bad ) { fprintf(stderr, "%d dialect guess(es) changed\n", bad); return 1; }
+	printf("all %zu dialect guesses unchanged\n", lines.size());
+	return 0;
+}
+
+
 /* ------------------------------------------------------- column content lengths */
 
 /*
@@ -906,6 +991,9 @@ static void usage() {
 		"  --fuzz N                      differential fuzz: N random inputs, serial vs parallel\n"
 		"  --colcheck DIR                columnContentLengths vs the per-cell reference\n"
 		"  --reusecheck DIR              parseCsvStream must be self-contained across calls\n"
+		"  --guess FILE                  report the guessed dialect and encoding for one file\n"
+		"  --guess-write DIR             write DIR/guesses.tsv\n"
+		"  --guess-check DIR             the guessed dialect for every corpus file is unchanged\n"
 		"  --bench-cols FILE             time the column-width scan both ways\n"
 		"\n"
 		"dialect: --delim T --quote T --escape T --enc NAME --bom N\n"
@@ -931,7 +1019,8 @@ int main(int argc, char** argv) {
 		    || a == "--golden-write" || a == "--golden-check" || a == "--diff-buffer"
 		    || a == "--utf8check" || a == "--utf8fuzz"
 		    || a == "--parallel" || a == "--diff-parallel" || a == "--sweep" || a == "--bench-parallel"
-		    || a == "--fuzz" || a == "--colcheck" || a == "--bench-cols" || a == "--reusecheck" ) {
+		    || a == "--fuzz" || a == "--colcheck" || a == "--bench-cols" || a == "--reusecheck"
+		    || a == "--guess" || a == "--guess-write" || a == "--guess-check" ) {
 			mode = a; arg = need(a.c_str());
 		} else if( a == "--delim" )  { if(!parseCharToken(need("--delim"),  def.delimiter)) { fprintf(stderr,"bad --delim\n"); return 2; } }
 		else if( a == "--quote" )  { if(!parseCharToken(need("--quote"),  def.quote))     { fprintf(stderr,"bad --quote\n"); return 2; } }
@@ -955,6 +1044,9 @@ int main(int argc, char** argv) {
 	if( mode == "--fuzz" )          return fuzzParallel(std::atoi(arg.c_str()));
 	if( mode == "--colcheck" )      return colCheck(arg);
 	if( mode == "--reusecheck" )    return reuseCheck(arg);
+	if( mode == "--guess-write" )   return guesses(arg, true);
+	if( mode == "--guess-check" )   return guesses(arg, false);
+	if( mode == "--guess" )       { printf("%s\t%s\n", arg.c_str(), guessLine(arg).c_str()); return 0; }
 
 	if( autoDetect ) {
 		auto d = detectEncoding(arg, Helper::getFileSize(arg));

@@ -21,6 +21,7 @@
 
 
 #include "csvwindow.hh"
+#include "csvguess.hh"
 #include "csvloader.hh"
 
 #include <climits>
@@ -375,12 +376,12 @@ bool CsvWindow::loadFile(std::string filename, bool askUser, bool reopen) {
 
 	// guess properties
 	if( haveBuffer ) {
-		guessedDefinition = CsvApplication::guessDefinition(mf.data(), mf.size());
+		guessedDefinition = CsvGuess::definition(mf.data(), mf.size());
 		// `validation` also tells us whether the parsed region is wholly valid UTF-8, which
 		// is what proves Helper::fixUtf8() is the identity for this file
-		guessedEncoding   = CsvApplication::guessEncoding(mf.data(), mf.size(), validation);
+		guessedEncoding   = CsvGuess::encoding(mf.data(), mf.size(), validation);
 	} else {
-		guessedDefinition = app.guessDefinition(&input);
+		guessedDefinition = CsvGuess::definition(&input);
 		guessedEncoding   = CsvApplication::guessEncoding(&input, fileLength);
 	}
 	definition = guessedDefinition.first;

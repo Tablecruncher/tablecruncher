@@ -30,5 +30,7 @@ echo "== column width scan"
 "$BIN" --colcheck "$DATA"
 echo "== parser state does not leak between calls"
 "$BIN" --reusecheck "$DATA"
+echo "== dialect guessing (decides silently how every file opens)"
+"$BIN" --guess-check "$DATA"
 echo
 echo "all green"
