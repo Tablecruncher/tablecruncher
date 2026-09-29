@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 #
 #   UPDATE THE VERSION NUMBER:
 #
-project(Tablecruncher VERSION 1.8.10)
+project(Tablecruncher VERSION 1.8.11)
 
 
 #

@@ -1,6 +1,18 @@
 Releases
 ========
 
+1.8.1 (2026-09-29)
+------------------
+
+This release fixes two bugs in the Windows version.
+
+* Fixed (Windows): Files can now be opened from the command line and
+  via Explorer (double-click, "Open with")
+* Fixed (Windows): Files with non-ASCII characters in their path
+  (e.g. "Übersicht.csv") can now be opened, saved and appear
+  correctly in the recent files list
+* Improved (Windows): The application icon is now embedded at build time
+
 
 1.8.0 (2025-05-21)
 ------------------
