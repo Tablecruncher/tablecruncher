@@ -49,6 +49,10 @@
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Box.H>
 
+#ifdef _WIN64
+#include <shellapi.h>
+#endif
+
 
 
 /** Global function to access the application's preferences as stored in the preferences file. */
@@ -116,7 +120,20 @@ int main(int argc, char** argv) {
 	app.setTheme(app.getTheme());
 	#endif
 
-	#ifndef _WIN64
+	#ifdef _WIN64
+	{
+		int wargc = 0;
+		LPWSTR* wargv = CommandLineToArgvW(GetCommandLineW(), &wargc);
+		if( wargv != nullptr ) {
+			for( int i = 1; i < wargc; ++i ) {
+				// open all files passed on the command line
+				std::string path = Helper::ws_to_utf8(std::wstring(wargv[i]));
+				CsvApplication::droppedFileCB(path.c_str());
+			}
+			LocalFree(wargv);
+		}
+	}
+	#else
 	for( int i = 1; i < argc; ++i ) {
 		// open all files passed on the command line
 		CsvApplication::droppedFileCB(argv[i]);

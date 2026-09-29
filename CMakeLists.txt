@@ -115,7 +115,8 @@ set(SOURCES
 include_directories(${SRCDIR} ${EXTERNAL} ${FLTKINCDIR} ${FLTKLIBDIR})
 
 if(WIN32)
-    add_executable(${PROJECT_NAME} WIN32 ${SOURCES})
+    enable_language(RC)
+    add_executable(${PROJECT_NAME} WIN32 ${SOURCES} assets/windows/app_icon.rc)
 else()
     add_executable(${PROJECT_NAME} ${SOURCES})
 endif()

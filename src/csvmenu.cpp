@@ -170,7 +170,7 @@ void CsvMenu::updateOpenRecentMenu(std::vector<std::string> files) {
 			std::string item_tpl = "&File/" TCRUNCHER_MENUTEXT_OPEN_RECENT "/&";
 			int i = 0;
 			for( auto filepath : files ) {
-				std::string filename_only = std::filesystem::path(filepath).filename().u8string();
+				std::string filename_only = std::filesystem::u8path(filepath).filename().u8string();
 				std::string item = item_tpl + filename_only; 					// + " (" + std::to_string(i+1) + ")";
 				add(item.c_str(), FL_COMMAND + ('1' + i), MyMenuCallback, (void *) &(INTEGERS[i]), 0);
 				++i;

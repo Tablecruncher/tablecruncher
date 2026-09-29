@@ -495,9 +495,15 @@ std::string Helper::padInteger(int num, int length) {
 
 // https://stackoverflow.com/questions/5840148/how-can-i-get-a-files-size-in-c
 long Helper::getFileSize(std::string filename) {
+#ifdef _WIN64
+	struct _stat64 stat_buf;
+	int rc = _wstat64(utf8_to_ws(filename).c_str(), &stat_buf);
+	return rc == 0 ? (long)stat_buf.st_size : -1;
+#else
 	struct stat stat_buf;
 	int rc = stat(filename.c_str(), &stat_buf);
 	return rc == 0 ? stat_buf.st_size : -1;
+#endif
 }
 
 
@@ -790,6 +796,46 @@ unsigned int Helper::getFltkFontCode(std::string fontname) {
 	}
 	return ret;
 }
+
+
+void Helper::openInputStream(std::ifstream& stream, const std::string& utf8Path, std::ios_base::openmode mode) {
+#ifdef _WIN64
+	stream.open(utf8_to_ws(utf8Path), mode);
+#else
+	stream.open(utf8Path, mode);
+#endif
+}
+
+
+void Helper::openOutputStream(std::ofstream& stream, const std::string& utf8Path, std::ios_base::openmode mode) {
+#ifdef _WIN64
+	stream.open(utf8_to_ws(utf8Path), mode);
+#else
+	stream.open(utf8Path, mode);
+#endif
+}
+
+
+#ifdef _WIN64
+std::string Helper::ws_to_utf8(std::wstring const& s) {
+	if( s.empty() ) return std::string();
+	int needed = WideCharToMultiByte(CP_UTF8, 0, s.data(), (int)s.size(), nullptr, 0, nullptr, nullptr);
+	if( needed <= 0 ) return std::string();
+	std::string out((size_t)needed, '\0');
+	WideCharToMultiByte(CP_UTF8, 0, s.data(), (int)s.size(), out.data(), needed, nullptr, nullptr);
+	return out;
+}
+
+
+std::wstring Helper::utf8_to_ws(std::string const& utf8) {
+	if( utf8.empty() ) return std::wstring();
+	int needed = MultiByteToWideChar(CP_UTF8, 0, utf8.data(), (int)utf8.size(), nullptr, 0);
+	if( needed <= 0 ) return std::wstring();
+	std::wstring out((size_t)needed, L'\0');
+	MultiByteToWideChar(CP_UTF8, 0, utf8.data(), (int)utf8.size(), out.data(), needed);
+	return out;
+}
+#endif
 
 
 
