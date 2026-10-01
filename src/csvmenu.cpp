@@ -23,6 +23,9 @@
 #include "csvmenu.hh"
 #include "csvapplication.hh"
 
+#include <FL/Enumerations.H>
+#include <filesystem>
+
 extern Fl_Preferences preferences;
 extern CsvApplication app;
 
@@ -44,9 +47,8 @@ void CsvMenu::init() {
 	int flags = 0;
 	std::string prefTheme = app.getPreference(&preferences, TCRUNCHER_PREF_THEME, "BRIGHT");
 	std::string prefFont = app.getPreference(&preferences, TCRUNCHER_PREF_GRID_TEXT_FONT, TCRUNCHER_FALLBACK_FONT);
-	
+	Fl::menu_linespacing(12);
 	// undoLabelText = TCRUNCHER_MENUTEXT_UNDO;
-	
 	box(FL_NO_BOX);
 	down_box(FL_NO_BOX);
 	add("&File/&New", FL_COMMAND + 'n', MyMenuCallback, 0, FL_MENU_DIVIDER);
@@ -129,7 +131,7 @@ void CsvMenu::init() {
 	#endif
 
 	#ifndef __APPLE__
-	down_box(FL_NO_BOX);
+	down_box(FL_FLAT_BOX);
 	#endif
 }
 

@@ -23,18 +23,16 @@
 #ifndef _CSVGRID_HH
 #define _CSVGRID_HH
 
+#include "globals.hh"
+#include "csvtable.hh"
 
-#include <algorithm>
+#include <FL/Fl_Scrollbar.H>
 
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Table.H>
 #include <FL/Fl_Multiline_Input.H>
 #include <FL/names.h>
-
-#include "globals.hh"
-#include "csvwindow.hh"
-#include "csvtable.hh"
 
 
 
@@ -67,6 +65,8 @@ public:
 	void selectAll();									// deletes the content of the selected cells
 	int handle(int);
     int innerWidth();                                   // return the inner width of the table grid 
+	Fl_Scrollbar *vscrollbar();
+	Fl_Scrollbar *hscrollbar();
 	
 
 protected:

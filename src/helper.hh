@@ -24,32 +24,24 @@
 #define _HELPER_HH
 
 
-#include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
 #include <map>
-#include <sstream>
-#include <algorithm>
-#include <regex>
 #include <sys/types.h>
-#include <chrono>
 #include <sys/stat.h>
-#include <codecvt>
 #include <cmath>
-
-#include "utf8.h"
+#include <cstdint>
+#include <utf8.h>
 
 #ifdef __APPLE__
 #include <sys/sysctl.h>
 #include <pwd.h>
-#include "CoreFoundation/CoreFoundation.h"
+#include <CoreFoundation/CoreFoundation.h>
 #endif
 
 #ifdef _WIN64
 #include <windows.h>
 #endif
-
 
 
 class Helper {

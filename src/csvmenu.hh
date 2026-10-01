@@ -23,12 +23,8 @@
 #ifndef _CSVMENU_HH
 #define _CSVMENU_HH
 
-#include <iostream>
 #include <string>
-#include <filesystem>
 #include <vector>
-#include <algorithm>
-
 
 #include <FL/Fl_Preferences.H>
 

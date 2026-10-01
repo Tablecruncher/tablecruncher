@@ -26,15 +26,18 @@
 *
 ************************************************************************************/
 
-#include "csvwindow.hh"
-#include "csvtable.hh"
+#include "colorthemes.hh"
+#include "csvapplication.hh"
 #include "csvgrid.hh"
+#include "csvtable.hh"
+#include "csvwindow.hh"
+#include "helper.hh"
 
+#include <algorithm>
 
 
 extern CsvWindow windows[];
 extern CsvApplication app;
-
 
 
 CsvGrid::CsvGrid(int X,int Y,int W,int H,const char* L) : Fl_Table(X,Y,W,H,L) {
@@ -57,6 +60,13 @@ CsvGrid::CsvGrid(int X,int Y,int W,int H,const char* L) : Fl_Table(X,Y,W,H,L) {
 	redraw();
 }
 
+Fl_Scrollbar *CsvGrid::vscrollbar() {
+	return Fl_Table::vscrollbar;
+}
+
+Fl_Scrollbar *CsvGrid::hscrollbar() {
+	return Fl_Table::hscrollbar;
+}
 
 CsvGrid::~CsvGrid() {
 	DEBUG_PRINTF("#### CsvGrid::~CsvGrid\n");

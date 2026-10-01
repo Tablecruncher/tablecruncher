@@ -22,18 +22,14 @@
 #ifndef _CSVDATASTORAGE_HH
 #define _CSVDATASTORAGE_HH
 
+#include "globals.hh"
+
 #include <FL/Fl.H> // called by sort() to update UI
 
-#include <algorithm>
-#include <vector>
 #include <string>
-#include <tuple>
-#include <iostream> // needed for dump()
-#include <iomanip>  // needed for dump()
-#include <chrono>
+#include <vector>
 
-#include "globals.hh"
-#include "utf8-cpp-utils/utf8_cpp_utils.hh"
+
 
 
 /**

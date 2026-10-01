@@ -20,8 +20,17 @@
  */
 
 
+#include "colorthemes.hh"
+#include "csvapplication.hh"
+#include "csvparser.hh"
 #include "csvwindow.hh"
+#include "helper.hh"
 
+#include <fstream>
+#include <json/json.hpp>
+#include <map>
+#include <sstream>
+#include <tuple>
 
 
 extern CsvApplication app;
@@ -620,10 +629,18 @@ void CsvWindow::applyTheme() {
 		statusbar->color(ColorThemes::getColor(app.getTheme(), "statusbar_bg"));
 		statusbar->labelcolor(ColorThemes::getColor(app.getTheme(), "statusbar_text"));
 		grid->color(ColorThemes::getColor(app.getTheme(), "table_bg"));
+		grid->vscrollbar()->color(ColorThemes::getColor(app.getTheme(), "header_row_bg"));
+		grid->vscrollbar()->selection_color(ColorThemes::getColor(app.getTheme(), "win_bg"));
+		grid->vscrollbar()->labelcolor(ColorThemes::getColor(app.getTheme(), "statusbar_text"));
+		grid->hscrollbar()->color(ColorThemes::getColor(app.getTheme(), "header_row_bg"));
+		grid->hscrollbar()->selection_color(ColorThemes::getColor(app.getTheme(), "win_bg"));
+		grid->hscrollbar()->labelcolor(ColorThemes::getColor(app.getTheme(), "statusbar_text"));
 		win->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
 		#ifndef __APPLE__
 		winMenuBar->textcolor(ColorThemes::getColor(app.getTheme(), "toolbar_text"));
-		winMenuBar->color(ColorThemes::getColor(app.getTheme(), "toolbar_bg"));
+		winMenuBar->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
+		#else
+		// winMenuBar->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
 		#endif
 		Fl::redraw();
 	}
@@ -686,7 +703,7 @@ void CsvWindow::readWindowPreferences() {
 
 void CsvWindow::setTypeButton(CsvDefinition definition) {
 	std::string str = "NONE";
-	str = CsvDefinition::getEncodingName(definition.encoding) + "\n" + CsvDefinition::getDelimiterName(definition.delimiter);
+	str = std::string(CsvDefinition::getEncodingName(definition.encoding)) + "\n" + CsvDefinition::getDelimiterName(definition.delimiter);
 	typeButton->copy_label(str.c_str());
 }
 

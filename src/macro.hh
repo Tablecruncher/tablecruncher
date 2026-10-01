@@ -23,14 +23,12 @@
 #ifndef _MACRO_HH
 #define _MACRO_HH
 
-#include <iostream>
+#include "csvtable.hh"
+
 #include <string>
 #include <vector>
-#include <thread>
 
-#include "duktape/duktape.h"
-
-#include "csvtable.hh"
+#include <duktape/duktape.h>
 
 
 extern void updateMacroLogBuffer(void *logBuffer, std::string str);

@@ -23,18 +23,16 @@
 #ifndef _CSVWINDOW_HH
 #define _CSVWINDOW_HH
 
+#include "csvwidgets.hh"
+#include "globals.hh"
+#include "csvundo.hh"
+#include "csvgrid.hh"
+#include "csvmenu.hh"
+#include "csvtable.hh"
 
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <map>
 #include <ctime>
 #include <deque>
-#include <tuple>
-#include <algorithm>
-#include <unordered_map>		// for hash
-
 
 #include <FL/Fl.H>
 #include <FL/fl_ask.H>
@@ -45,18 +43,6 @@
 #include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Light_Button.H>
 #include <FL/Fl_PNG_Image.H>
-
-#include "json/json.hpp"
-
-#include "helper.hh"
-#include "csvwidgets.hh"
-#include "globals.hh"
-#include "csvundo.hh"
-#include "csvgrid.hh"
-#include "csvmenu.hh"
-#include "csvtable.hh"
-#include "csvapplication.hh"
-#include "csvparser.hh"
 
 
 namespace ui_icons {

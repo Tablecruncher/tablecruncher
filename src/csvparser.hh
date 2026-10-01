@@ -23,21 +23,6 @@
 #ifndef _CSVPARSER_HH
 #define _CSVPARSER_HH
 
-
-#include <iostream>
-#include <string>
-#include <vector>
-#include <tuple>
-#include <istream>
-#include <cstdint>
-#include <inttypes.h>
-
-// for reading utf16
-#include <locale>
-#include <codecvt>
-
-
-#include "helper.hh"
 #include "globals.hh"
 #include "csvdatastorage.hh"
 
@@ -45,6 +30,13 @@
 #include "csvapplication.hh"
 #include "csvwindow.hh"
 #endif
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <istream>
+#include <cstdint>
+#include <inttypes.h>
 
 
 #define CSVPARSER_CONST_ENCLOSED 1

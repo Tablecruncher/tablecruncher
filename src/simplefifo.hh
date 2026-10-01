@@ -29,7 +29,6 @@
 #include <stdexcept>
 
 
-
 class SimpleFifo {
 
 public:

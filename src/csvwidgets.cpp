@@ -23,6 +23,7 @@
 #include "csvwidgets.hh"
 #include "csvwindow.hh"
 #include "csvapplication.hh"
+#include "colorthemes.hh"
 
 
 extern CsvApplication app;
@@ -58,7 +59,7 @@ My_Toolbar::My_Toolbar(int X,int Y,int W,int H) : Fl_Pack(X,Y,W,H) {
 	@param	shortName	If given, it is used as the button text (if no image is present)
 	@return				Newly created button.
 */
-Fl_Button *My_Toolbar::AddButton(const char *name, Fl_RGB_Image *img, Fl_Callback *cb, void *data, int width, std::string shortName, int fontSize) {
+Fl_Button *My_Toolbar::AddButton(const char *name, Fl_RGB_Image *img, Fl_Callback *cb, void *data, int width, const char *shortName, int fontSize) {
 	begin();
 	if( !width ) {
 		width = 40;
@@ -74,8 +75,8 @@ Fl_Button *My_Toolbar::AddButton(const char *name, Fl_RGB_Image *img, Fl_Callbac
 		b->labelcolor(ColorThemes::getColor(app.getTheme(), "toolbar_text"));
 		if( fontSize > 0 )
 			b->labelsize(fontSize);
-		if( shortName != "" ) {
-			b->copy_label(shortName.c_str());
+		if( strcmp(shortName, "") ) {
+			b->copy_label(shortName);
 		} else {
 			b->copy_label(name);
 		}
