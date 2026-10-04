@@ -45,6 +45,9 @@
 
 Fl_Color toolbarHoverColor();
 
+/** Windows only (no-op elsewhere): sets the app icon and colors the title bar to match the current theme. */
+void styleWindowFrame(Fl_Window *w);
+
 /** Adds hover highlight and hand cursor to a toolbar button class (Fl_Button, Fl_Light_Button, ...). */
 template<class Base>
 class My_Toolbar_Hover : public Base {

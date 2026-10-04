@@ -2913,6 +2913,7 @@ void CsvApplication::setTheme(std::string theme) {
 	colorsHighlightButton.windowBg = ColorThemes::getColor(this->theme, "win_bg");
 	colorsHighlightButton.borderWidth = ColorThemes::getColor(this->theme, "highlight_button_border_width");
 	searchWin->color(ColorThemes::getColor(this->theme, "win_bg"));
+	styleWindowFrame(searchWin);
 	searchInput->labelcolor(ColorThemes::getColor(this->theme, "win_text"));
 	replaceInput->labelcolor(ColorThemes::getColor(this->theme, "win_text"));
 	findButton->colors = colorsHighlightButton;

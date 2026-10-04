@@ -25,6 +25,8 @@
 #include "csvapplication.hh"
 #ifdef _WIN64
 #include <FL/platform.H>
+#include <dwmapi.h>
+#pragma comment(lib, "dwmapi.lib")
 #endif
 
 
@@ -38,6 +40,33 @@ extern CsvWindow windows[];
 *
 ************************************************************************************/
 
+
+#ifdef _WIN64
+static COLORREF flToColorref(Fl_Color c) {
+	uchar r, g, b;
+	Fl::get_color(c, r, g, b);
+	return RGB(r, g, b);
+}
+#endif
+
+void styleWindowFrame(Fl_Window *w) {
+	#ifdef _WIN64
+	if( !w || !w->shown() ) return;
+	HWND hwnd = fl_xid(w);
+	HINSTANCE inst = GetModuleHandle(NULL);
+	// icon from the .rc resource (FLTK would use the default application icon)
+	SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)LoadImage(inst, "MAINICON", IMAGE_ICON, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), 0));
+	SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)LoadImage(inst, "MAINICON", IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0));
+	// title bar: dark mode flag works on Win10 20H1+, caption colors on Win11 (ignored if unsupported)
+	Fl_Color bg = ColorThemes::getColor(app.getTheme(), "win_bg");
+	COLORREF bgRef = flToColorref(bg);
+	COLORREF textRef = flToColorref(ColorThemes::getColor(app.getTheme(), "win_text"));
+	BOOL dark = (GetRValue(bgRef) * 299 + GetGValue(bgRef) * 587 + GetBValue(bgRef) * 114) / 1000 < 128;
+	DwmSetWindowAttribute(hwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &dark, sizeof(dark));
+	DwmSetWindowAttribute(hwnd, 35 /* DWMWA_CAPTION_COLOR */, &bgRef, sizeof(bgRef));
+	DwmSetWindowAttribute(hwnd, 36 /* DWMWA_TEXT_COLOR */, &textRef, sizeof(textRef));
+	#endif
+}
 
 Fl_Color toolbarHoverColor() {
 	return fl_color_average(ColorThemes::getColor(app.getTheme(), "toolbar_text"), ColorThemes::getColor(app.getTheme(), "toolbar_bg"), 0.15f);
@@ -148,6 +177,7 @@ void My_Fl_Small_Window::show() {
 		SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
 	}
 	#endif
+	styleWindowFrame(this);
 }
 
 /**

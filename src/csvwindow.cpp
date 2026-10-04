@@ -290,6 +290,7 @@ void CsvWindow::create(int createdWindowCount) {
 	
 	win->resizable(grid);
 	win->show();
+	styleWindowFrame(win);
 }
 
 
@@ -621,6 +622,7 @@ void CsvWindow::applyTheme() {
 		statusbar->labelcolor(ColorThemes::getColor(app.getTheme(), "statusbar_text"));
 		grid->color(ColorThemes::getColor(app.getTheme(), "table_bg"));
 		win->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
+		styleWindowFrame(win);
 		#ifndef __APPLE__
 		winMenuBar->textcolor(ColorThemes::getColor(app.getTheme(), "toolbar_text"));
 		winMenuBar->color(ColorThemes::getColor(app.getTheme(), "toolbar_bg"));
