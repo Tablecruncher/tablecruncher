@@ -43,6 +43,44 @@
 
 
 
+Fl_Color toolbarHoverColor();
+
+/** Adds hover highlight and hand cursor to a toolbar button class (Fl_Button, Fl_Light_Button, ...). */
+template<class Base>
+class My_Toolbar_Hover : public Base {
+  public:
+	template<class... Args> My_Toolbar_Hover(Args... args) : Base(args...) {}
+	int handle(int event) {
+		if( event == FL_ENTER || event == FL_LEAVE ) {
+			hover = (event == FL_ENTER) && this->active();
+			if( this->window() ) {
+				this->window()->cursor(hover ? FL_CURSOR_HAND : FL_CURSOR_DEFAULT);
+				// FL_NO_BOX doesn't clear its area, so repaint the window region behind the button
+				this->window()->damage(FL_DAMAGE_ALL, this->x(), this->y(), this->w(), this->h());
+			}
+		}
+		return Base::handle(event);
+	}
+	void draw() {
+		if( !hover ) {
+			Base::draw();
+		} else if( this->box() == FL_NO_BOX ) {
+			fl_rectf(this->x(), this->y(), this->w(), this->h(), toolbarHoverColor());
+			Base::draw();
+		} else {
+			Fl_Color c = this->color();
+			this->color(toolbarHoverColor());
+			Base::draw();
+			this->color(c);
+		}
+	}
+  private:
+	bool hover = false;
+};
+typedef My_Toolbar_Hover<Fl_Button> My_Toolbar_Button;
+typedef My_Toolbar_Hover<Fl_Light_Button> My_Toolbar_Check_Button;
+
+
 class My_Toolbar : public Fl_Pack {
   public:
 	My_Toolbar(int X,int Y,int W,int H);

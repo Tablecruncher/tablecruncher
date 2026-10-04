@@ -23,6 +23,9 @@
 #include "csvwidgets.hh"
 #include "csvwindow.hh"
 #include "csvapplication.hh"
+#ifdef _WIN64
+#include <FL/platform.H>
+#endif
 
 
 extern CsvApplication app;
@@ -34,6 +37,11 @@ extern CsvWindow windows[];
 *	My_Toolbar
 *
 ************************************************************************************/
+
+
+Fl_Color toolbarHoverColor() {
+	return fl_color_average(ColorThemes::getColor(app.getTheme(), "toolbar_text"), ColorThemes::getColor(app.getTheme(), "toolbar_bg"), 0.15f);
+}
 
 
 /**
@@ -63,7 +71,7 @@ Fl_Button *My_Toolbar::AddButton(const char *name, Fl_RGB_Image *img, Fl_Callbac
 	if( !width ) {
 		width = 40;
 	}
-	Fl_Button *b = new Fl_Button(0,0,width,width);
+	Fl_Button *b = cb ? new My_Toolbar_Button(0,0,width,width) : new Fl_Button(0,0,width,width);	// no hover for separators
 	b->box(FL_NO_BOX);
 	b->clear_visible_focus();
 	if( name )
@@ -98,7 +106,7 @@ Fl_Button *My_Toolbar::AddButton(const char *name, Fl_RGB_Image *img, Fl_Callbac
 */
 Fl_Light_Button *My_Toolbar::AddCheckButton(const char *name, Fl_Callback *cb, void *data, int width) {
 	begin();
-	Fl_Light_Button *b = new Fl_Light_Button(0,0,width,TCRUNCHER_ICON_BAR_HEIGHT-18, name);
+	Fl_Light_Button *b = new My_Toolbar_Check_Button(0,0,width,TCRUNCHER_ICON_BAR_HEIGHT-18, name);
 	b->box(FL_FLAT_BOX);
 	b->color(ColorThemes::getColor(app.getTheme(), "toolbar_bg"));
 	b->labelcolor(ColorThemes::getColor(app.getTheme(), "toolbar_text"));
