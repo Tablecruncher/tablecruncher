@@ -69,6 +69,8 @@ class My_Fl_Small_Window : public Fl_Window {
 	  My_Fl_Small_Window(int, int, const char *);
 	  My_Fl_Small_Window(int, int, int, int, const char *);
 	  int handle(int);
+	  using Fl_Window::show;
+	  void show() override;
 	  virtual void gotFocus();
 	  int32_t dataExchange;
 };

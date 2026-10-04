@@ -128,6 +128,21 @@ My_Fl_Small_Window::My_Fl_Small_Window(int W,int H, const char* title) : Fl_Wind
 My_Fl_Small_Window::My_Fl_Small_Window(int X,int Y,int W,int H, const char* title) : Fl_Window (X, Y, W, H, title) {}
 
 /**
+ *	FLTK omits WS_SYSMENU for non-resizable modal windows on Windows, so they have no close button.
+ *	Add it after showing; the X then triggers the window callback just like ESC.
+ */
+void My_Fl_Small_Window::show() {
+	Fl_Window::show();
+	#ifdef _WIN64
+	if( modal() ) {
+		HWND hwnd = fl_xid(this);
+		SetWindowLongPtr(hwnd, GWL_STYLE, GetWindowLongPtr(hwnd, GWL_STYLE) | WS_SYSMENU);
+		SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+	}
+	#endif
+}
+
+/**
  *	Calls window callback function with 0 (for ESC or red Close Win Button) or TCRUNCHER_MYFLCHOICE_MAGICAL for pressing ENTER
  */
 int My_Fl_Small_Window::handle(int event) {
