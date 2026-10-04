@@ -68,8 +68,22 @@ void styleWindowFrame(Fl_Window *w) {
 	#endif
 }
 
-Fl_Color toolbarHoverColor() {
-	return fl_color_average(ColorThemes::getColor(app.getTheme(), "toolbar_text"), ColorThemes::getColor(app.getTheme(), "toolbar_bg"), 0.15f);
+Fl_Color themeHoverColor(const char *bgKey, const char *textKey) {
+	return fl_color_average(ColorThemes::getColor(app.getTheme(), textKey), ColorThemes::getColor(app.getTheme(), bgKey), 0.15f);
+}
+
+My_Fl_Choice::My_Fl_Choice(int X, int Y, int W, int H, const char *label) : Fl_Choice(X, Y, W, H, label) {
+	color(ColorThemes::getColor(app.getTheme(), "win_bg"));
+	textcolor(ColorThemes::getColor(app.getTheme(), "win_text"));
+	labelcolor(ColorThemes::getColor(app.getTheme(), "win_text"));
+	selection_color(themeHoverColor("win_bg", "win_text"));	// the popup uses this for the highlighted item
+}
+
+int My_Fl_Choice::handle(int event) {
+	if( (event == FL_ENTER || event == FL_LEAVE) && window() ) {
+		window()->cursor(event == FL_ENTER && active() ? FL_CURSOR_HAND : FL_CURSOR_DEFAULT);
+	}
+	return Fl_Choice::handle(event);
 }
 
 

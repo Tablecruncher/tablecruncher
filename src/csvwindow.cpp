@@ -627,6 +627,7 @@ void CsvWindow::applyTheme() {
 		#ifndef __APPLE__
 		winMenuBar->textcolor(ColorThemes::getColor(app.getTheme(), "toolbar_text"));
 		winMenuBar->color(ColorThemes::getColor(app.getTheme(), "toolbar_bg"));
+		winMenuBar->selection_color(themeHoverColor());
 		#endif
 		Fl::redraw();
 	}

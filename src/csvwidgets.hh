@@ -30,6 +30,7 @@
 #include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Light_Button.H>
+#include <FL/Fl_Choice.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Pixmap.H>
 
@@ -43,7 +44,8 @@
 
 
 
-Fl_Color toolbarHoverColor();
+/** Hover/selection highlight shared by buttons and menus: a light tint of the text color over the background. */
+Fl_Color themeHoverColor(const char *bgKey = "toolbar_bg", const char *textKey = "toolbar_text");
 
 /** Windows only (no-op elsewhere): sets the app icon and colors the title bar to match the current theme. */
 void styleWindowFrame(Fl_Window *w);
@@ -68,11 +70,11 @@ class My_Toolbar_Hover : public Base {
 		if( !hover ) {
 			Base::draw();
 		} else if( this->box() == FL_NO_BOX ) {
-			fl_rectf(this->x(), this->y(), this->w(), this->h(), toolbarHoverColor());
+			fl_rectf(this->x(), this->y(), this->w(), this->h(), themeHoverColor());
 			Base::draw();
 		} else {
 			Fl_Color c = this->color();
-			this->color(toolbarHoverColor());
+			this->color(themeHoverColor());
 			Base::draw();
 			this->color(c);
 		}
@@ -82,6 +84,14 @@ class My_Toolbar_Hover : public Base {
 };
 typedef My_Toolbar_Hover<Fl_Button> My_Toolbar_Button;
 typedef My_Toolbar_Hover<Fl_Light_Button> My_Toolbar_Check_Button;
+
+
+/** Dropdown styled with the current theme (incl. hover highlight of the popup items). */
+class My_Fl_Choice : public Fl_Choice {
+  public:
+	My_Fl_Choice(int X, int Y, int W, int H, const char *label = 0);
+	int handle(int event);
+};
 
 
 class My_Toolbar : public Fl_Pack {

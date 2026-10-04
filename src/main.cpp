@@ -67,6 +67,14 @@ Fl_Preferences file_preferences(Fl_Preferences::USER, TCRUNCHER_PREF_FOLDER, TCR
 /** The single instance of `CsvApplication` that handles all the application funcionality. */
 CsvApplication app;
 
+/** Event dispatcher: popup menu windows (dropdowns, menu bar menus) get a hand cursor like the other clickable elements. */
+static int menuCursorDispatcher(int event, Fl_Window *win) {
+	if( win && win->menu_window() && (event == FL_ENTER || event == FL_MOVE) ) {
+		win->cursor(FL_CURSOR_HAND);
+	}
+	return Fl::handle_(event, win);
+}
+
 /** A list of all opened windows (class `CsvWindow`). */
 CsvWindow windows[TCRUNCHER_MAX_WINDOWS];
 
@@ -96,6 +104,8 @@ int main(int argc, char** argv) {
 	#ifndef __APPLE__
 	//Fl::scheme("gleam");
 	#endif
+
+	Fl::event_dispatch(menuCursorDispatcher);
 
 	// Open an initial window
 	app.createNewWindow();

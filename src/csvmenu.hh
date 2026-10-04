@@ -68,12 +68,21 @@ public:
 	void init();
 	// const void activateUndoMenuItem( bool activate = true );
 	void updateOpenRecentMenu(std::vector<std::string> files);
+	#ifndef __APPLE__
+	int handle(int event);
+	void draw();
+	#endif
 
 private:
 	static void MyMenuCallback(Fl_Widget *w, void *data);
 	const int INTEGERS[TCRUNCHER_MENU_NUM_INTEGERS] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 	
 	// std::string undoLabelText;
+	#ifndef __APPLE__
+	void setHover(int mouseX);
+	int hoverX = 0;
+	int hoverW = 0;			// 0: no top-level item hovered
+	#endif
 };
 
 
