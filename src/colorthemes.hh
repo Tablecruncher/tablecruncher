@@ -23,6 +23,7 @@
  #ifndef _COLORTHEMES_HH
 #define _COLORTHEMES_HH
 
+#include <cstdio>
 #include <map>
 #include <string>
 #include <stdexcept>
@@ -49,6 +50,12 @@ std::cerr << "Undefined color!" << std::endl;
 #endif
             return 0x66666600;
         }
+    }
+    /** Returns the color as HTML hex code, e.g. "#F0F0F0" */
+    static std::string getHtmlColor(std::string theme, std::string color) {
+        char buf[8];
+        snprintf(buf, sizeof(buf), "#%06X", getColor(theme, color) >> 8);
+        return buf;
     }
     static bool isTheme(std::string theme) {
         if( ColorThemes::colors.count(theme) == 0 ) {

@@ -23,7 +23,8 @@
 #include "csvapplication.hh"
 #include "csvmenu.hh"
 
-#include "icons/abouticon.xpm"
+#include <FL/Fl_SVG_Image.H>
+#include "icons/abouticon_svg.hh"
 
 
 
@@ -2983,14 +2984,16 @@ void CsvApplication::aboutCB(Fl_Widget *, void *) {
 	#endif
 
 	aboutWin = new My_Fl_Small_Window(640, 510);
-	aboutWin->color(TCRUNCHER_SMALL_WINDOW_BACKGROUND);
+	aboutWin->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
 
-	Fl_Pixmap icon(abouticon);
+	Fl_SVG_Image icon(NULL, abouticon_svg);
+	icon.resize(128, 128);
 	iconBox = new Fl_Box(320-64,20,128,128);
 	iconBox->image(icon);
 	
 	nameBox = new Fl_Box(FL_FLAT_BOX, 10,170, 630,60, "Tablecruncher" );
-	nameBox->color(0xF0F0F000);
+	nameBox->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
+	nameBox->labelcolor(ColorThemes::getColor(app.getTheme(), "win_text"));
 	nameBox->labelsize(30);
 	nameBox->labelfont(FL_HELVETICA);
 	
@@ -3013,7 +3016,7 @@ void CsvApplication::aboutCB(Fl_Widget *, void *) {
 
 	html =
 		"<html>"
-			"<body bgcolor=\"" TCRUNCHER_SMALL_WINDOW_BACKGROUND_HTMLCODE "\">"
+			"<body bgcolor=\"" + ColorThemes::getHtmlColor(app.getTheme(), "win_bg") + "\" text=\"" + ColorThemes::getHtmlColor(app.getTheme(), "win_text") + "\" link=\"" + ColorThemes::getHtmlColor(app.getTheme(), "win_text") + "\">"
 				"<center>"
 					"<p>Version: " +
 						VERSION_STR +
@@ -3035,6 +3038,7 @@ void CsvApplication::aboutCB(Fl_Widget *, void *) {
 	helpView->textsize(16);
 	helpView->textfont(FL_HELVETICA);
 	helpView->box(FL_FLAT_BOX);
+	helpView->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
 	helpView->value( html.c_str() );
 	
 	aboutWin->set_modal();

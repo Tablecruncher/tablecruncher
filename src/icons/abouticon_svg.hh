@@ -1,0 +1,31 @@
+/*
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * About dialog icon as SVG (scales crisply). Source: assets/artwork/app-icon.svg
+ */
+
+#ifndef _UI_ICONS_ABOUTICON_SVG
+#define _UI_ICONS_ABOUTICON_SVG
+
+static const char *abouticon_svg = R"SVG(<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="-8 -8 528 528">
+  <defs>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2f2f2"/>
+      <stop offset="1" stop-color="#c1c1c1"/>
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="256" fill="url(#rim)"/>
+  <circle cx="256" cy="256" r="242" fill="#f79646"/>
+  <rect x="72" y="132" width="110" height="65" rx="12" fill="#fff"/>
+  <rect x="203" y="132" width="110" height="65" rx="12" fill="#fff"/>
+  <rect x="334" y="132" width="110" height="65" rx="12" fill="#fff"/>
+  <rect x="74.5" y="226.5" width="105" height="60" rx="10" fill="none" stroke="#fff" stroke-width="5"/>
+  <rect x="203" y="224" width="110" height="65" rx="12" fill="#fff"/>
+  <rect x="336.5" y="226.5" width="105" height="60" rx="10" fill="none" stroke="#fff" stroke-width="5"/>
+  <rect x="74.5" y="318.5" width="105" height="60" rx="10" fill="none" stroke="#fff" stroke-width="5"/>
+  <rect x="203" y="316" width="110" height="65" rx="12" fill="#fff"/>
+  <rect x="334" y="316" width="110" height="65" rx="12" fill="#fff"/>
+</svg>
+)SVG";
+
+#endif
