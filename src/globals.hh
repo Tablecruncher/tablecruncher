@@ -52,6 +52,7 @@ const int TCRUNCHER_PREF_UPDATE_CHECK_DAYS = 2;				// check two days
 #define TCRUNCHER_PREF_UPDATE_CHECK_ALLOWED "updateCheckAllowed"
 #define TCRUNCHER_PREF_SHOWED_ONBOARDING "showedOnboarding"
 #define TCRUNCHER_PREF_GRID_TEXT_FONT "gridTextFont"
+#define TCRUNCHER_PREF_CUSTOM_DELIMITERS "customDelimiters"		// JSON array of strings
 #define TCRUNCHER_PREF_RECENT_FILES_STUB "recent_file_"
 #define TCRUNCHER_PREF_RECENT_FILES_NUM 9
 
@@ -157,7 +158,7 @@ public:
 		QUOTE_STYLE_STRING								// Quote all cells that are non-numeric
 	};
 	Encodings encoding = ENC_UTF8;					// encoding of the connected file
-	char delimiter = ',';							// Delimiter
+	std::string delimiter = ",";					// Delimiter (UTF-8, may be multi-byte, e.g. U+00A6)
 	char quote = '"';								// Quote character
 	char escape = '"';								// Escape character
 	int bomBytes = 0;								// length of a ByteOrderMarker (zero if no BOM present)
@@ -192,31 +193,15 @@ public:
 		}
 		return str;
 	}
-	static std::string getDelimiterName(char delimiter) {
-		std::string str = "undef";
-		switch(delimiter) {
-			case ',':
-				str = "COMMA";
-			break;
-			case ';':
-				str = "SEMI";
-			break;
-			case '\t':
-				str = "TAB";
-			break;
-			case ':':
-				str = "COLON";
-			break;
-			case '|':
-				str = "PIPE";
-			break;
-			case '*':
-				str = "ASTER";
-			break;
-			default:
-			break;
-		}
-		return str;
+	static std::string getDelimiterName(const std::string &delimiter) {
+		if( delimiter == "," ) return "COMMA";
+		if( delimiter == ";" ) return "SEMI";
+		if( delimiter == "\t" ) return "TAB";
+		if( delimiter == ":" ) return "COLON";
+		if( delimiter == "|" ) return "PIPE";
+		if( delimiter == "*" ) return "ASTER";
+		if( delimiter == "\xC2\xA6" ) return "BROKEN BAR";
+		return delimiter.empty() ? "undef" : delimiter;		// custom delimiter: show it as is
 	}
 };
 

@@ -865,6 +865,90 @@ int CsvApplication::getTopWindow() {
 
 
 
+// The delimiter choice in the "Choose CSV Type" window lists the built-in delimiters, then the user's custom delimiters
+// (saved in the preferences), then an "Add custom ..." entry.
+static const char *BUILTIN_DELIMITERS[] = { ",", ";", "\t", "|", ":", "*", "\xC2\xA6" };
+static const int NUM_BUILTIN_DELIMITERS = 7;
+static const size_t MAX_CUSTOM_DELIMITERS = 10;			// the oldest gets dropped
+static const size_t MAX_CUSTOM_DELIMITER_BYTES = 20;		// keeps the JSON in the preferences below TCRUNCHER_PREF_VALUE_MAX_LENGTH
+static std::vector<std::string> customDelimiters;
+static bool customDelimitersLoaded = false;
+
+static bool isUsableDelimiter(const std::string &d) {
+	return !d.empty() && d.size() <= MAX_CUSTOM_DELIMITER_BYTES && d.find_first_of("\"\r\n") == std::string::npos;
+}
+
+static void loadCustomDelimiters() {
+	if( customDelimitersLoaded ) return;
+	customDelimitersLoaded = true;
+	try {
+		nlohmann::json j = nlohmann::json::parse( app.getPreference(&preferences, TCRUNCHER_PREF_CUSTOM_DELIMITERS, "[]") );
+		for( const auto &d : j ) {
+			if( d.is_string() && isUsableDelimiter(d.get<std::string>()) ) customDelimiters.push_back(d.get<std::string>());
+		}
+	} catch( const std::exception &e ) {
+		std::cerr << "Error reading custom delimiters: " << e.what() << std::endl;
+	}
+}
+
+// index of `delimiter` in the delimiter choice, -1 if it's neither built-in nor saved
+static int delimiterChoiceIndex(const std::string &delimiter) {
+	for( int i = 0; i < NUM_BUILTIN_DELIMITERS; ++i ) {
+		if( delimiter == BUILTIN_DELIMITERS[i] ) return i;
+	}
+	for( size_t i = 0; i < customDelimiters.size(); ++i ) {
+		if( delimiter == customDelimiters[i] ) return NUM_BUILTIN_DELIMITERS + (int) i;
+	}
+	return -1;
+}
+
+// saves a new custom delimiter; returns false if it's unusable. Already known delimiters are left alone.
+static bool addCustomDelimiter(const std::string &delimiter) {
+	if( !isUsableDelimiter(delimiter) ) return false;
+	if( delimiterChoiceIndex(delimiter) >= 0 ) return true;
+	customDelimiters.push_back(delimiter);
+	if( customDelimiters.size() > MAX_CUSTOM_DELIMITERS ) {
+		customDelimiters.erase( customDelimiters.begin() );
+	}
+	nlohmann::json j = customDelimiters;
+	preferences.set(TCRUNCHER_PREF_CUSTOM_DELIMITERS, j.dump().c_str());
+	return true;
+}
+
+// (re)builds all entries of the delimiter choice
+static void fillDelimiterChoice(Fl_Choice *choice) {
+	choice->clear();
+	// the single-argument add() would split labels at '|', so always use add(label, shortcut, callback)
+	#ifdef _WIN64
+	choice->add("Comma ,", 0, 0);							// 0
+	choice->add("Semicolon ;", 0, 0);						// 1
+	choice->add("Tab", 0, 0);								// 2
+	choice->add("Pipe |", 0, 0);							// 3
+	choice->add("Colon :", 0, 0);							// 4
+	choice->add("Asterisk *", 0, 0);						// 5
+	choice->add("Broken bar \xC2\xA6", 0, 0);				// 6
+	#else
+	choice->add(", Comma", 0, 0);							// 0
+	choice->add("; Semicolon", 0, 0);						// 1
+	choice->add("⇥ Tab", 0, 0);							// 2
+	choice->add("╎ Pipe", 0, 0);							// 3
+	choice->add(": Colon", 0, 0);							// 4
+	choice->add("* Asterisk", 0, 0);						// 5
+	choice->add("\xC2\xA6 Broken bar", 0, 0);				// 6
+	#endif
+	for( const std::string &d : customDelimiters ) {
+		// escape what Fl_Menu_::add() and the label drawing treat specially
+		std::string label = "Custom: ";
+		for( char c : d ) {
+			if( c == '\\' || c == '/' ) label.push_back('\\');
+			if( c == '&' ) label.push_back('&');
+			label.push_back(c);
+		}
+		choice->add(label.c_str(), 0, 0);
+	}
+	choice->add("Add custom ...", 0, 0);
+}
+
 /*
  *	Guesses the definition of the given stream, returning some confidence value with it
  */
@@ -892,6 +976,14 @@ std::pair<CsvDefinition, float> CsvApplication::guessDefinition(std::istream *in
 	std::get<0>(definitions.at(5)).delimiter = ',';
 	std::get<0>(definitions.at(6)).delimiter = ';';
 	std::get<0>(definitions.at(6)).delimiter = '*';
+	std::get<0>(definitions.at(7)).delimiter = "\xC2\xA6";		// broken bar U+00A6
+	loadCustomDelimiters();
+	const size_t firstCustomDefinition = definitions.size();
+	for( const std::string &d : customDelimiters ) {
+		// also probe the delimiters the user saved
+		definitions.push_back( std::tuple<CsvDefinition, int, int>(CsvDefinition(),0,0) );
+		std::get<0>(definitions.back()).delimiter = d;
+	}
 	std::get<0>(definitions.at(5)).escape = '\\';
 	std::get<0>(definitions.at(6)).escape = '\\';
 	
@@ -905,14 +997,26 @@ std::pair<CsvDefinition, float> CsvApplication::guessDefinition(std::istream *in
 		localStorage.clear();
 		parser->parseCsvStream( input, localStorage, &(std::get<0>(definitions.at(i))), MAXLINES, false );
 		statistics = tableStatistics(localStorage);
+		if( i >= firstCustomDefinition && (statistics.first < 2 || statistics.second != 0) ) {
+			// saved custom delimiters only count when they split every probed line into the same number of columns –
+			// otherwise short ones like "e" would hijack the detection
+			statistics = std::make_pair(1, 0);
+		}
 		// not so commonly used seperators and escape characters: decrease statistics value
+		const std::string &probeDelimiter = std::get<0>(definitions.at(i)).delimiter;
+		bool rareDelimiter = probeDelimiter == ":" || probeDelimiter == "|" || probeDelimiter == "\xC2\xA6" ||
+			delimiterChoiceIndex(probeDelimiter) >= NUM_BUILTIN_DELIMITERS;
 		if(
-			std::get<0>(definitions.at(i)).delimiter == ':' ||
-			std::get<0>(definitions.at(i)).delimiter == '|' ||
+			rareDelimiter ||
 			std::get<0>(definitions.at(i)).escape == '\\' ||
 				std::get<0>(definitions.at(i)).escape == '*'
 		) {
-			statistics.first = statistics.first * 70 / 100;
+			int penalized = statistics.first * 70 / 100;
+			if( rareDelimiter && statistics.first >= 2 ) {
+				// a rare delimiter that really splits the lines must not drop to a single column – it would get sorted out below
+				penalized = std::max(2, penalized);
+			}
+			statistics.first = penalized;
 		}
 		std::get<1>(definitions.at(i)) = statistics.first;
 		if( statistics.first <= 1 && statistics.second == 0) {
@@ -922,7 +1026,7 @@ std::pair<CsvDefinition, float> CsvApplication::guessDefinition(std::istream *in
 			std::get<2>(definitions.at(i)) = statistics.second;
 		}
 		#ifdef DEBUG
-		printf("CSV = '%c' => %d / %d\n", std::get<0>(definitions.at(i)).delimiter, statistics.first, statistics.second);
+		printf("CSV = '%s' => %d / %d\n", std::get<0>(definitions.at(i)).delimiter.c_str(), statistics.first, statistics.second);
 		#endif
 	}
 	
@@ -944,7 +1048,7 @@ std::pair<CsvDefinition, float> CsvApplication::guessDefinition(std::istream *in
 		confidence /= 2;
 	}
 	// improve confidence, if it's a typical CSV separator
-	if( std::get<0>(definitions.at(0)).delimiter == ',' || std::get<0>(definitions.at(0)).delimiter == '\t' ) {
+	if( std::get<0>(definitions.at(0)).delimiter == "," || std::get<0>(definitions.at(0)).delimiter == "\t" ) {
 		confidence += (1.0 - confidence) * 0.5;
 	}
 	
@@ -1125,26 +1229,9 @@ CsvDefinition CsvApplication::setTypeByUser(CsvDefinition guessedDefinition, std
 	}
 	
 	// set guessed delimiter as start value
-	switch( definition.delimiter ) {
-		case ',':
-			delDefault = 0;
-		break;
-		case ';':
-			delDefault = 1;
-		break;
-		case '\t':
-			delDefault = 2;
-		break;
-		case '|':
-			delDefault = 3;
-		break;
-		case ':':
-			delDefault = 4;
-		break;
-		case '*':
-			delDefault = 5;
-		break;
-	}
+	loadCustomDelimiters();
+	addCustomDelimiter(definition.delimiter);			// e.g. a custom delimiter that has been dropped from the list
+	delDefault = std::max(0, delimiterChoiceIndex(definition.delimiter));
 	
 	// set guessed escape character as start value
 	switch( definition.escape ) {
@@ -1219,21 +1306,7 @@ CsvDefinition CsvApplication::setTypeByUser(CsvDefinition guessedDefinition, std
 	app.encChoice->callback(setTypeByUser_Enc_CB, &previewTable);
 	
 	delChoice = new My_Fl_Choice(110, 80, 160, 25, "Delimiter: ");
-	#ifdef _WIN64
-	delChoice->add("Comma ,");							// 0
-	delChoice->add("Semicolon ;");						// 1
-	delChoice->add("Tab");							    // 2
-	delChoice->add("Pipe \\|");							// 3
-	delChoice->add("Colon :");							// 4
-	delChoice->add("Asterisk *");						// 5
-	#else
-	delChoice->add(", Comma");							// 0
-	delChoice->add("; Semicolon");						// 1
-	delChoice->add("⇥ Tab");							// 2
-	delChoice->add("╎ Pipe");							// 3
-	delChoice->add(": Colon");							// 4
-	delChoice->add("* Asterisk");						// 5
-	#endif
+	fillDelimiterChoice(delChoice);
 	delChoice->value(delDefault);
 	delChoice->labelcolor(ColorThemes::getColor(app.getTheme(), "win_text"));
 	delChoice->callback(setTypeByUser_Type_CB, &previewTable);
@@ -1326,30 +1399,29 @@ void CsvApplication::setTypeByUser_Done_CB(Fl_Widget *, long data) {
 
 void CsvApplication::setTypeByUser_Type_CB(Fl_Widget *widget, void *data) {
 	struct previewTableStruct previewTable;
+	Fl_Choice *choice = (Fl_Choice *)widget;
 	int type;
 	
 	previewTable = *(struct previewTableStruct *) data;
-	type = ((Fl_Choice *)widget)->value();
+	type = choice->value();
 	
-	switch( type ) {
-		case 0:
-			previewTable.definition->delimiter= ',';
-		break;
-		case 1:
-			previewTable.definition->delimiter= ';';
-		break;
-		case 2:
-			previewTable.definition->delimiter= '\t';
-		break;
-		case 3:
-			previewTable.definition->delimiter= '|';
-		break;
-		case 4:
-			previewTable.definition->delimiter= ':';
-		break;
-		case 5:
-			previewTable.definition->delimiter= '*';
-		break;
+	if( type == NUM_BUILTIN_DELIMITERS + (int) customDelimiters.size() ) {
+		// "Add custom ..."
+		int ok;
+		std::string custom;
+		std::tie(ok, custom) = myFlAskString("Custom delimiter", "OK");
+		if( !ok || !addCustomDelimiter(custom) ) {
+			// cancelled or unusable: keep the previous delimiter
+			choice->value( std::max(0, delimiterChoiceIndex(previewTable.definition->delimiter)) );
+			return;
+		}
+		previewTable.definition->delimiter = custom;
+		fillDelimiterChoice(choice);					// the list may have changed
+		choice->value( delimiterChoiceIndex(custom) );
+	} else if( type < NUM_BUILTIN_DELIMITERS ) {
+		previewTable.definition->delimiter = BUILTIN_DELIMITERS[type];
+	} else {
+		previewTable.definition->delimiter = customDelimiters.at(type - NUM_BUILTIN_DELIMITERS);
 	}
 	if( previewTable.input )
 		showPreview(previewTable);
@@ -1545,9 +1617,9 @@ void CsvApplication::paste(bool askUser, bool fillSelection) {
 		guessedDefinition.second < 1.0 ||
 		askUser ||
 		(
-			definition.delimiter != ',' &&
-			definition.delimiter != ';' &&
-			definition.delimiter != '\t' &&
+			definition.delimiter != "," &&
+			definition.delimiter != ";" &&
+			definition.delimiter != "\t" &&
 			definition.delimiter != (windows[topWindow].table->getDefinition()).delimiter
 		)
 	) {

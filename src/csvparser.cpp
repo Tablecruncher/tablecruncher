@@ -172,6 +172,8 @@ void CsvParser::parseCsvLine(std::vector<std::string>& vector, const std::string
 	bool startField = true;				// true: immer zu Beginn eines Feldes
 
 	long lineLen = line.size();
+	const std::string &delim = definition->delimiter;		// must not be empty
+	const size_t delimLen = delim.size();
 	std::string real_field = "";
 	
 	if( parseCsvState == CSVPARSER_CONST_ENCLOSED ) {
@@ -234,8 +236,9 @@ void CsvParser::parseCsvLine(std::vector<std::string>& vector, const std::string
 		}
 
 
-		if( line[i] == definition->delimiter && !enclosed ) {
+		if( !enclosed && line[i] == delim[0] && (delimLen == 1 || line.compare(i, delimLen, delim) == 0) ) {
 			// Zeichen ist ein Seperator und wir sind nicht quotiert: aktuelles Feld zurückschreiben
+			i += delimLen - 1;		// delimiter may be multi-byte
 			vector.push_back( real_field );
 			real_field = "";
 			enclosed = false;
