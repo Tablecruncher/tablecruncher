@@ -939,7 +939,7 @@ static void fillDelimiterChoice(Fl_Choice *choice) {
 		// escape what Fl_Menu_::add() and the label drawing treat specially
 		std::string label = "Custom: ";
 		for( char c : d ) {
-			if( c == '\\' || c == '/' ) label.push_back('\\');
+			if( c == '\\' || c == '/' || c == '|' ) label.push_back('\\');		// add() splits items at '|'
 			if( c == '&' ) label.push_back('&');
 			label.push_back(c);
 		}
