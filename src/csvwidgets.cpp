@@ -23,6 +23,11 @@
 #include "csvwidgets.hh"
 #include "csvwindow.hh"
 #include "csvapplication.hh"
+#ifdef _WIN64
+#include <FL/platform.H>
+#include <dwmapi.h>
+#pragma comment(lib, "dwmapi.lib")
+#endif
 
 
 extern CsvApplication app;
@@ -34,6 +39,52 @@ extern CsvWindow windows[];
 *	My_Toolbar
 *
 ************************************************************************************/
+
+
+#ifdef _WIN64
+static COLORREF flToColorref(Fl_Color c) {
+	uchar r, g, b;
+	Fl::get_color(c, r, g, b);
+	return RGB(r, g, b);
+}
+#endif
+
+void styleWindowFrame(Fl_Window *w) {
+	#ifdef _WIN64
+	if( !w || !w->shown() ) return;
+	HWND hwnd = fl_xid(w);
+	HINSTANCE inst = GetModuleHandle(NULL);
+	// icon from the .rc resource (FLTK would use the default application icon)
+	SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)LoadImage(inst, "MAINICON", IMAGE_ICON, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), 0));
+	SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)LoadImage(inst, "MAINICON", IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0));
+	// title bar: dark mode flag works on Win10 20H1+, caption colors on Win11 (ignored if unsupported)
+	Fl_Color bg = ColorThemes::getColor(app.getTheme(), "win_bg");
+	COLORREF bgRef = flToColorref(bg);
+	COLORREF textRef = flToColorref(ColorThemes::getColor(app.getTheme(), "win_text"));
+	BOOL dark = (GetRValue(bgRef) * 299 + GetGValue(bgRef) * 587 + GetBValue(bgRef) * 114) / 1000 < 128;
+	DwmSetWindowAttribute(hwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &dark, sizeof(dark));
+	DwmSetWindowAttribute(hwnd, 35 /* DWMWA_CAPTION_COLOR */, &bgRef, sizeof(bgRef));
+	DwmSetWindowAttribute(hwnd, 36 /* DWMWA_TEXT_COLOR */, &textRef, sizeof(textRef));
+	#endif
+}
+
+Fl_Color themeHoverColor(const char *bgKey, const char *textKey) {
+	return fl_color_average(ColorThemes::getColor(app.getTheme(), textKey), ColorThemes::getColor(app.getTheme(), bgKey), 0.15f);
+}
+
+My_Fl_Choice::My_Fl_Choice(int X, int Y, int W, int H, const char *label) : Fl_Choice(X, Y, W, H, label) {
+	color(ColorThemes::getColor(app.getTheme(), "win_bg"));
+	textcolor(ColorThemes::getColor(app.getTheme(), "win_text"));
+	labelcolor(ColorThemes::getColor(app.getTheme(), "win_text"));
+	selection_color(themeHoverColor("win_bg", "win_text"));	// the popup uses this for the highlighted item
+}
+
+int My_Fl_Choice::handle(int event) {
+	if( (event == FL_ENTER || event == FL_LEAVE) && window() ) {
+		window()->cursor(event == FL_ENTER && active() ? FL_CURSOR_HAND : FL_CURSOR_DEFAULT);
+	}
+	return Fl_Choice::handle(event);
+}
 
 
 /**
@@ -63,7 +114,7 @@ Fl_Button *My_Toolbar::AddButton(const char *name, Fl_RGB_Image *img, Fl_Callbac
 	if( !width ) {
 		width = 40;
 	}
-	Fl_Button *b = new Fl_Button(0,0,width,width);
+	Fl_Button *b = cb ? new My_Toolbar_Button(0,0,width,width) : new Fl_Button(0,0,width,width);	// no hover for separators
 	b->box(FL_NO_BOX);
 	b->clear_visible_focus();
 	if( name )
@@ -98,7 +149,7 @@ Fl_Button *My_Toolbar::AddButton(const char *name, Fl_RGB_Image *img, Fl_Callbac
 */
 Fl_Light_Button *My_Toolbar::AddCheckButton(const char *name, Fl_Callback *cb, void *data, int width) {
 	begin();
-	Fl_Light_Button *b = new Fl_Light_Button(0,0,width,TCRUNCHER_ICON_BAR_HEIGHT-18, name);
+	Fl_Light_Button *b = new My_Toolbar_Check_Button(0,0,width,TCRUNCHER_ICON_BAR_HEIGHT-18, name);
 	b->box(FL_FLAT_BOX);
 	b->color(ColorThemes::getColor(app.getTheme(), "toolbar_bg"));
 	b->labelcolor(ColorThemes::getColor(app.getTheme(), "toolbar_text"));
@@ -126,6 +177,22 @@ Fl_Light_Button *My_Toolbar::AddCheckButton(const char *name, Fl_Callback *cb, v
 My_Fl_Small_Window::My_Fl_Small_Window(int W,int H) : Fl_Window (W, H) {}
 My_Fl_Small_Window::My_Fl_Small_Window(int W,int H, const char* title) : Fl_Window (W, H, title) {}
 My_Fl_Small_Window::My_Fl_Small_Window(int X,int Y,int W,int H, const char* title) : Fl_Window (X, Y, W, H, title) {}
+
+/**
+ *	FLTK omits WS_SYSMENU for non-resizable modal windows on Windows, so they have no close button.
+ *	Add it after showing; the X then triggers the window callback just like ESC.
+ */
+void My_Fl_Small_Window::show() {
+	Fl_Window::show();
+	#ifdef _WIN64
+	if( modal() ) {
+		HWND hwnd = fl_xid(this);
+		SetWindowLongPtr(hwnd, GWL_STYLE, GetWindowLongPtr(hwnd, GWL_STYLE) | WS_SYSMENU);
+		SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+	}
+	#endif
+	styleWindowFrame(this);
+}
 
 /**
  *	Calls window callback function with 0 (for ESC or red Close Win Button) or TCRUNCHER_MYFLCHOICE_MAGICAL for pressing ENTER

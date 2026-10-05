@@ -290,6 +290,7 @@ void CsvWindow::create(int createdWindowCount) {
 	
 	win->resizable(grid);
 	win->show();
+	styleWindowFrame(win);
 }
 
 
@@ -563,7 +564,7 @@ void CsvWindow::showInfoWindow() {
 	
 	htmlStream <<
 		"<html>" <<
-			"<body bgcolor=\"" << TCRUNCHER_SMALL_WINDOW_BACKGROUND_HTMLCODE << "\">" <<
+			"<body bgcolor=\"" << ColorThemes::getHtmlColor(app.getTheme(), "win_bg") << "\" text=\"" << ColorThemes::getHtmlColor(app.getTheme(), "win_text") << "\">" <<
 				"<h2>File</h2>"
 					"<br>" <<
 					filePath <<
@@ -593,13 +594,14 @@ void CsvWindow::showInfoWindow() {
 
 	modal = new My_Fl_Small_Window(640,480);
 	modal->set_modal();
-	modal->color(TCRUNCHER_SMALL_WINDOW_BACKGROUND);
+	modal->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
 	modal->label("CSV Information");
 
 	helpView = new Fl_Help_View(20,20, 600,440);
 	helpView->textsize(12);
 	helpView->textfont(FL_HELVETICA);
 	helpView->box(FL_FLAT_BOX);
+	helpView->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
 	helpView->value( htmlStream.str().c_str() );
 
 	modal->show();
@@ -621,9 +623,11 @@ void CsvWindow::applyTheme() {
 		statusbar->labelcolor(ColorThemes::getColor(app.getTheme(), "statusbar_text"));
 		grid->color(ColorThemes::getColor(app.getTheme(), "table_bg"));
 		win->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
+		styleWindowFrame(win);
 		#ifndef __APPLE__
 		winMenuBar->textcolor(ColorThemes::getColor(app.getTheme(), "toolbar_text"));
 		winMenuBar->color(ColorThemes::getColor(app.getTheme(), "toolbar_bg"));
+		winMenuBar->selection_color(themeHoverColor());
 		#endif
 		Fl::redraw();
 	}

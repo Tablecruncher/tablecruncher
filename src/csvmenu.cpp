@@ -21,6 +21,7 @@
 
 
 #include "csvmenu.hh"
+#include "csvwidgets.hh"
 #include "csvapplication.hh"
 
 extern Fl_Preferences preferences;
@@ -38,6 +39,54 @@ CsvMenu::CsvMenu() : TC_CSVMENU_MENU_BAR_CLASS(0,0,600,30) {
 
 
 CsvMenu::~CsvMenu() {}
+
+
+#ifndef __APPLE__
+/** Hover highlight and hand cursor for the top-level items (File, Edit, ...); mouseX < 0 clears it. */
+void CsvMenu::setHover(int mouseX) {
+	int newX = 0, newW = 0;
+	if( mouseX >= 0 && menu() && menu()->text ) {
+		int X = x() + 6;
+		for( const Fl_Menu_Item *m = menu()->first(); m->text; m = m->next() ) {
+			int W = m->measure(0, this) + 16;
+			if( mouseX >= X && mouseX < X + W && m->active() ) {
+				newX = X;
+				newW = W;
+				break;
+			}
+			X += W;
+		}
+	}
+	if( newX == hoverX && newW == hoverW ) return;
+	hoverX = newX;
+	hoverW = newW;
+	if( window() ) {
+		window()->cursor(hoverW ? FL_CURSOR_HAND : FL_CURSOR_DEFAULT);
+		// the bar has no box, so repaint the window region behind it to erase the old highlight
+		window()->damage(FL_DAMAGE_ALL, x(), y(), w(), h());
+	}
+}
+
+int CsvMenu::handle(int event) {
+	if( event == FL_ENTER || event == FL_MOVE ) {
+		setHover(Fl::event_x());
+	} else if( event == FL_LEAVE ) {
+		setHover(-1);
+	}
+	int ret = Fl_Menu_Bar::handle(event);
+	if( event == FL_PUSH ) {
+		setHover(-1);		// the pulldown ran its own loop; re-evaluated on next mouse move
+	}
+	return ret;
+}
+
+void CsvMenu::draw() {
+	if( hoverW ) {
+		fl_rectf(hoverX, y(), hoverW, h(), themeHoverColor());
+	}
+	Fl_Menu_Bar::draw();
+}
+#endif
 
 
 void CsvMenu::init() {

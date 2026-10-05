@@ -23,7 +23,8 @@
 #include "csvapplication.hh"
 #include "csvmenu.hh"
 
-#include "icons/abouticon.xpm"
+#include <FL/Fl_SVG_Image.H>
+#include "icons/abouticon_svg.hh"
 
 
 
@@ -1206,7 +1207,7 @@ CsvDefinition CsvApplication::setTypeByUser(CsvDefinition guessedDefinition, std
 	app.setTypeByUserWin->end();
 	
 	app.setTypeByUserWin->begin();
-	app.encChoice = new Fl_Choice(110, 30, 160, 25, "Encoding: ");
+	app.encChoice = new My_Fl_Choice(110, 30, 160, 25, "Encoding: ");
 	app.encChoice->add("Choose ...");						// 0
 	app.encChoice->add("UTF-8");							// 1
 	app.encChoice->add("Latin 1");							// 2
@@ -1217,7 +1218,7 @@ CsvDefinition CsvApplication::setTypeByUser(CsvDefinition guessedDefinition, std
 	app.encChoice->labelcolor(ColorThemes::getColor(app.getTheme(), "win_text"));
 	app.encChoice->callback(setTypeByUser_Enc_CB, &previewTable);
 	
-	delChoice = new Fl_Choice(110, 80, 160, 25, "Delimiter: ");
+	delChoice = new My_Fl_Choice(110, 80, 160, 25, "Delimiter: ");
 	#ifdef _WIN64
 	delChoice->add("Comma ,");							// 0
 	delChoice->add("Semicolon ;");						// 1
@@ -1239,7 +1240,7 @@ CsvDefinition CsvApplication::setTypeByUser(CsvDefinition guessedDefinition, std
 
 	if( input ) {
 		// Show Escape character chooser only when reading CSV data
-		escChoice = new Fl_Choice(350, 30, 160, 25, "Escape: ");
+		escChoice = new My_Fl_Choice(350, 30, 160, 25, "Escape: ");
 		escChoice->add("\" Quote");							// 0
 		escChoice->add("\\\\ Backslash");					// 1
 		escChoice->value(escDefault);
@@ -1249,7 +1250,7 @@ CsvDefinition CsvApplication::setTypeByUser(CsvDefinition guessedDefinition, std
 	
 	if( !input ) {
 		// don't show quote style chooser on "open with format ..."
-		quoteChoice = new Fl_Choice(350, 30, 160, 25, "Quotes: ");
+		quoteChoice = new My_Fl_Choice(350, 30, 160, 25, "Quotes: ");
 		quoteChoice->add("Only when needed");					// QUOTE_STYLE_RFC
 		quoteChoice->add("On all fields");						// QUOTE_STYLE_ALL
 		quoteChoice->add("Around all strings");					// QUOTE_STYLE_STRING
@@ -1874,7 +1875,7 @@ void CsvApplication::sort(unsigned int column) {
 	sortWin->callback(doSortWinCB);
 	
 	sortWin->begin();
-	colChoice = new Fl_Choice(90, 30, 120, 25, "Column: ");
+	colChoice = new My_Fl_Choice(90, 30, 120, 25, "Column: ");
 	if( column >= windows[windowIndex].table->headerRow->size() )
 		column = 0;
 	for( size_t c = 0; c < windows[windowIndex].table->headerRow->size(); ++c ) {
@@ -1883,13 +1884,13 @@ void CsvApplication::sort(unsigned int column) {
 	colChoice->value(column);
 	colChoice->labelcolor(ColorThemes::getColor(app.getTheme(), "win_text"));
 
-	orderChoice = new Fl_Choice(280, 30, 120, 25, "Order: ");
+	orderChoice = new My_Fl_Choice(280, 30, 120, 25, "Order: ");
 	orderChoice->add("Ascending");
 	orderChoice->add("Descending");
 	orderChoice->value(0);
 	orderChoice->labelcolor(ColorThemes::getColor(app.getTheme(), "win_text"));
 	
-	typeChoice = new Fl_Choice(470, 30, 120, 25, "Type: ");
+	typeChoice = new My_Fl_Choice(470, 30, 120, 25, "Type: ");
 	typeChoice->add("Numeric");
 	typeChoice->add("String");
 	typeChoice->add("String (ignore case)");
@@ -2569,7 +2570,7 @@ void CsvApplication::splitCol() {
 	splitColWin->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
 	splitColWin->label("Split Column");
 
-	colChoice = new Fl_Choice(100, 50, 120, 25, "Column: ");
+	colChoice = new My_Fl_Choice(100, 50, 120, 25, "Column: ");
 	if( column < 0 || column >= (table_index_t) windows[windowIndex].table->headerRow->size() )
 		column = 0;
 	for( table_index_t c = 0; c < (table_index_t) windows[windowIndex].table->headerRow->size(); ++c ) {
@@ -2639,7 +2640,7 @@ void CsvApplication::mergeCols() {
 	mergeColWin->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
 	mergeColWin->label("Merge Columns");
 
-	colChoice = new Fl_Choice(100, 50, 120, 25, "Columns: ");
+	colChoice = new My_Fl_Choice(100, 50, 120, 25, "Columns: ");
 	if( column == (table_index_t) windows[windowIndex].table->headerRow->size() - 1 && column > 0 ) {
 		--column;
 	}
@@ -2913,6 +2914,7 @@ void CsvApplication::setTheme(std::string theme) {
 	colorsHighlightButton.windowBg = ColorThemes::getColor(this->theme, "win_bg");
 	colorsHighlightButton.borderWidth = ColorThemes::getColor(this->theme, "highlight_button_border_width");
 	searchWin->color(ColorThemes::getColor(this->theme, "win_bg"));
+	styleWindowFrame(searchWin);
 	searchInput->labelcolor(ColorThemes::getColor(this->theme, "win_text"));
 	replaceInput->labelcolor(ColorThemes::getColor(this->theme, "win_text"));
 	findButton->colors = colorsHighlightButton;
@@ -2982,14 +2984,16 @@ void CsvApplication::aboutCB(Fl_Widget *, void *) {
 	#endif
 
 	aboutWin = new My_Fl_Small_Window(640, 510);
-	aboutWin->color(TCRUNCHER_SMALL_WINDOW_BACKGROUND);
+	aboutWin->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
 
-	Fl_Pixmap icon(abouticon);
+	Fl_SVG_Image icon(NULL, abouticon_svg);
+	icon.resize(128, 128);
 	iconBox = new Fl_Box(320-64,20,128,128);
 	iconBox->image(icon);
 	
 	nameBox = new Fl_Box(FL_FLAT_BOX, 10,170, 630,60, "Tablecruncher" );
-	nameBox->color(0xF0F0F000);
+	nameBox->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
+	nameBox->labelcolor(ColorThemes::getColor(app.getTheme(), "win_text"));
 	nameBox->labelsize(30);
 	nameBox->labelfont(FL_HELVETICA);
 	
@@ -3012,7 +3016,7 @@ void CsvApplication::aboutCB(Fl_Widget *, void *) {
 
 	html =
 		"<html>"
-			"<body bgcolor=\"" TCRUNCHER_SMALL_WINDOW_BACKGROUND_HTMLCODE "\">"
+			"<body bgcolor=\"" + ColorThemes::getHtmlColor(app.getTheme(), "win_bg") + "\" text=\"" + ColorThemes::getHtmlColor(app.getTheme(), "win_text") + "\" link=\"" + ColorThemes::getHtmlColor(app.getTheme(), "win_text") + "\">"
 				"<center>"
 					"<p>Version: " +
 						VERSION_STR +
@@ -3034,6 +3038,7 @@ void CsvApplication::aboutCB(Fl_Widget *, void *) {
 	helpView->textsize(16);
 	helpView->textfont(FL_HELVETICA);
 	helpView->box(FL_FLAT_BOX);
+	helpView->color(ColorThemes::getColor(app.getTheme(), "win_bg"));
 	helpView->value( html.c_str() );
 	
 	aboutWin->set_modal();
