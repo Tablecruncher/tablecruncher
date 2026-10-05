@@ -918,34 +918,35 @@ static bool addCustomDelimiter(const std::string &delimiter) {
 // (re)builds all entries of the delimiter choice
 static void fillDelimiterChoice(Fl_Choice *choice) {
 	choice->clear();
+	// the single-argument add() would split labels at '|', so always use add(label, shortcut, callback)
 	#ifdef _WIN64
-	choice->add("Comma ,");							// 0
-	choice->add("Semicolon ;");						// 1
-	choice->add("Tab");								// 2
-	choice->add("Pipe \\|");							// 3
-	choice->add("Colon :");							// 4
-	choice->add("Asterisk *");						// 5
-	choice->add("Broken bar \xC2\xA6");				// 6
+	choice->add("Comma ,", 0, 0);							// 0
+	choice->add("Semicolon ;", 0, 0);						// 1
+	choice->add("Tab", 0, 0);								// 2
+	choice->add("Pipe |", 0, 0);							// 3
+	choice->add("Colon :", 0, 0);							// 4
+	choice->add("Asterisk *", 0, 0);						// 5
+	choice->add("Broken bar \xC2\xA6", 0, 0);				// 6
 	#else
-	choice->add(", Comma");							// 0
-	choice->add("; Semicolon");						// 1
-	choice->add("⇥ Tab");							// 2
-	choice->add("╎ Pipe");							// 3
-	choice->add(": Colon");							// 4
-	choice->add("* Asterisk");						// 5
-	choice->add("\xC2\xA6 Broken bar");				// 6
+	choice->add(", Comma", 0, 0);							// 0
+	choice->add("; Semicolon", 0, 0);						// 1
+	choice->add("⇥ Tab", 0, 0);							// 2
+	choice->add("╎ Pipe", 0, 0);							// 3
+	choice->add(": Colon", 0, 0);							// 4
+	choice->add("* Asterisk", 0, 0);						// 5
+	choice->add("\xC2\xA6 Broken bar", 0, 0);				// 6
 	#endif
 	for( const std::string &d : customDelimiters ) {
 		// escape what Fl_Menu_::add() and the label drawing treat specially
 		std::string label = "Custom: ";
 		for( char c : d ) {
-			if( c == '\\' || c == '/' || c == '|' ) label.push_back('\\');		// add() splits items at '|'
+			if( c == '\\' || c == '/' ) label.push_back('\\');
 			if( c == '&' ) label.push_back('&');
 			label.push_back(c);
 		}
-		choice->add(label.c_str());
+		choice->add(label.c_str(), 0, 0);
 	}
-	choice->add("Add custom ...");
+	choice->add("Add custom ...", 0, 0);
 }
 
 /*
