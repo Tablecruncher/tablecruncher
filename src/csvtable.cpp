@@ -1168,12 +1168,13 @@ bool CsvTable::toBeQuoted(std::string field, CsvDefinition definition) {
 		return true;
 	}
 	for( char& c : field ) {
-		// Line breaks, Field enclosures (double quotes) and Field separators (comma, semicolon, tab, bar) lead to quotation
-		if( c == '\n' || c == definition.quote || c == definition.delimiter ) {
+		// Line breaks and Field enclosures (double quotes) lead to quotation
+		if( c == '\n' || c == definition.quote ) {
 			return true;
 		}
 	}
-	return false;
+	// Field separators (comma, semicolon, tab, bar, custom) lead to quotation, too
+	return field.find(definition.delimiter) != std::string::npos;
 }
 
 

@@ -668,13 +668,12 @@ void CsvWindow::readWindowPreferences() {
 	if( filePref != "" ) {
 		try {
 			winJson = nlohmann::json::parse( filePref );
-			// set column widths
-			int c = 0;
-			for(const auto &w : winJson["col-widths"] ) {
-				if( c < table->getNumberCols() ) {
-					grid->col_width(c, w);
+			// set column widths – but only if the number of columns is unchanged (e.g. the file was parsed with another delimiter back then)
+			if( (table_index_t) winJson["col-widths"].size() == table->getNumberCols() ) {
+				int c = 0;
+				for(const auto &w : winJson["col-widths"] ) {
+					grid->col_width(c++, w);
 				}
-				++c;
 			}
 			// show or hide headers if needed
 			if( winJson["header-set"].get<bool>() != table->customHeaderRowShown() ) {
@@ -689,9 +688,21 @@ void CsvWindow::readWindowPreferences() {
 
 
 void CsvWindow::setTypeButton(CsvDefinition definition) {
-	std::string str = "NONE";
-	str = CsvDefinition::getEncodingName(definition.encoding) + "\n" + CsvDefinition::getDelimiterName(definition.delimiter);
+	// the button only has room for 5 characters per line
+	std::string del = CsvDefinition::getDelimiterName(definition.delimiter);
+	if( del == "BROKEN BAR" ) {
+		del = "BAR";
+	} else {
+		size_t chars = 0, bytes = 0;
+		while( bytes < del.size() && (chars < 5 || ((unsigned char)del[bytes] & 0xC0) == 0x80) ) {
+			if( ((unsigned char)del[bytes] & 0xC0) != 0x80 ) ++chars;		// count UTF-8 lead bytes only
+			++bytes;
+		}
+		del.resize(bytes);
+	}
+	std::string str = CsvDefinition::getEncodingName(definition.encoding) + "\n" + del;
 	typeButton->copy_label(str.c_str());
+	if( typeButton->parent() ) typeButton->parent()->redraw();		// don't leave remnants of the previous label
 }
 
 
