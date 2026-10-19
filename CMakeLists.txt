@@ -38,7 +38,7 @@ set(FLTKLIBDIR "" CACHE PATH "Path to FLTK lib directory (optional if FLTKDIR is
 if(NOT FLTKINCDIR)
     if(FLTKDIR)
         set(FLTKINCDIR ${FLTKDIR})
-    else()
+    elseif(APPLE)
         message(FATAL_ERROR "Please set either FLTKINCDIR or FLTKDIR.")
     endif()
 endif()
@@ -46,7 +46,7 @@ endif()
 if(NOT FLTKLIBDIR)
     if(FLTKDIR)
         set(FLTKLIBDIR ${FLTKDIR})
-    else()
+    elseif(APPLE)
         message(FATAL_ERROR "Please set either FLTKLIBDIR or FLTKDIR.")
     endif()
 endif()
@@ -145,17 +145,9 @@ elseif(WIN32)
     target_link_options(${PROJECT_NAME} PRIVATE ${LINKER_FLAGS})
     target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 elseif(LINUX)
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-        ${FLTKLIBDIR}/lib/libfltk.a
-        ${FLTKLIBDIR}/lib/libfltk_images.a
-        ${FLTKLIBDIR}/lib/libfltk_z.a
-        Xft
-        fontconfig
-        Xrender
-        X11
-        pthread
-        dl
-    )
+    set(FLTK_DIR ${FLTKLIBDIR})
+    find_package(FLTK 1.4 CONFIG REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE fltk::fltk fltk::images)
 endif()
 
 
