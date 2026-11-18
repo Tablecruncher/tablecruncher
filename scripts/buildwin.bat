@@ -5,7 +5,9 @@ setlocal
 set /p VERSION=<version.txt
 
 :: Update icon using Resource Hacker
+rem Alternative: Resource Cracker https://www.pelock.com/products/resource-cracker
 "C:\Program Files (x86)\Resource Hacker\ResourceHacker.exe" -open ..\build\dist\Tablecruncher.exe -save Tablecruncher_patched.exe -action addoverwrite -res ..\assets\windows\app_icon.ico -mask ICONGROUP,MAINICON,
+rem Alternative: Resource Cracker https://www.pelock.com/download/resource-cracker.exe
 
 :: Replace original if patching succeeded
 if exist Tablecruncher_patched.exe (
